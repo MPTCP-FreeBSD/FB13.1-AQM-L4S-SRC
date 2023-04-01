@@ -877,11 +877,14 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 
 	 /* classify a packet to queue number*/
 	idx = fq_pie_classify_flow(m, param->flows_cnt, si);
+	printf("FQ_PIE clossify FLow queue number: %d", idx);
 
 	/* enqueue packet into appropriate queue using PIE AQM.
 	 * Note: 'pie_enqueue' function returns 1 only when it unable to 
 	 * add timestamp to packet (no limit check)*/
 	drop = pie_enqueue(&flows[idx], m, si);
+
+	printf("FQ_PIE drop: %d", drop);
 
 	/* pie unable to timestamp a packet */ 
 	if (drop)
@@ -896,6 +899,8 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 		fq_activate_pie(&flows[idx]);
 		flows[idx].active = 1;
 	}
+
+	printf("FQ_PIE flows active: %d", flows[idx].active);
 
 	/* check the limit for all queues and remove a packet from the
 	 * largest one 
@@ -915,6 +920,7 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 			drop = 1;
 		}
 	}
+	printf("End of FQ_PIE_enqueue");
 
 	return drop;
 }
@@ -936,13 +942,16 @@ fq_pie_dequeue(struct dn_sch_inst *_si)
 	si = (struct fq_pie_si *)_si;
 	schk = (struct fq_pie_schk *)(si->_si.sched+1);
 	param = &schk->cfg;
+	printf("FQ_PIE dequeue start");
 
 	do {
 		/* select a list to start with */
 		if (STAILQ_EMPTY(&si->newflows))
 			fq_pie_flowlist = &si->oldflows;
+			
 		else
 			fq_pie_flowlist = &si->newflows;
+			
 
 		/* Both new and old queue lists are empty, return NULL */
 		if (STAILQ_EMPTY(fq_pie_flowlist)) 
@@ -957,6 +966,7 @@ fq_pie_dequeue(struct dn_sch_inst *_si)
 			 */
 			if (f->deficit < 0) {
 				 f->deficit += param->quantum;
+				 printf("fq pie deficit dequeue")
 				 STAILQ_REMOVE_HEAD(fq_pie_flowlist, flowchain);
 				 STAILQ_INSERT_TAIL(&si->oldflows, f, flowchain);
 			 } else 
@@ -971,6 +981,8 @@ fq_pie_dequeue(struct dn_sch_inst *_si)
 
 		/* Dequeue a packet from the selected flow */
 		mbuf = pie_dequeue(f, si);
+
+		printf("Dequeue successfull")
 
 		/* pie did not return a packet */
 		if (!mbuf) {
@@ -993,6 +1005,7 @@ fq_pie_dequeue(struct dn_sch_inst *_si)
 		/* we have a packet to return, 
 		 * update flow deficit and return the packet*/
 		f->deficit -= mbuf->m_pkthdr.len;
+		printf("FQ_PIE dequeue end and deficit updated");
 		return mbuf;
 
 	} while (1);
