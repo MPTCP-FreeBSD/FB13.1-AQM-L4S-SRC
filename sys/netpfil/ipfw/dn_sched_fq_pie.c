@@ -966,7 +966,7 @@ fq_pie_dequeue(struct dn_sch_inst *_si)
 			 */
 			if (f->deficit < 0) {
 				 f->deficit += param->quantum;
-				 printf("fq pie deficit dequeue")
+				 printf("fq pie deficit dequeue");
 				 STAILQ_REMOVE_HEAD(fq_pie_flowlist, flowchain);
 				 STAILQ_INSERT_TAIL(&si->oldflows, f, flowchain);
 			 } else 
@@ -982,7 +982,7 @@ fq_pie_dequeue(struct dn_sch_inst *_si)
 		/* Dequeue a packet from the selected flow */
 		mbuf = pie_dequeue(f, si);
 
-		printf("Dequeue successfull")
+		printf("Dequeue successfull");
 
 		/* pie did not return a packet */
 		if (!mbuf) {
