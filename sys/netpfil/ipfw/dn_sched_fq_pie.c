@@ -339,7 +339,7 @@ fq_pie_extract_head(struct fq_pie_flow *q, aqm_time_t *pkt_ts,
 	struct fq_pie_si *si, int getts)
 {
 	struct mbuf *m;
-	printf("Start fq_pie_extract_head");
+	printf("Start fq_pie_extract_head \n");
 
 next:	m = q->mq.head;
 	if (m == NULL)
@@ -878,14 +878,14 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 
 	 /* classify a packet to queue number*/
 	idx = fq_pie_classify_flow(m, param->flows_cnt, si);
-	printf("FQ_PIE clossify FLow queue number: %d", idx);
+	printf("enqueue:FQ_PIE clossify FLow queue number: %d \n", idx);
 
 	/* enqueue packet into appropriate queue using PIE AQM.
 	 * Note: 'pie_enqueue' function returns 1 only when it unable to 
 	 * add timestamp to packet (no limit check)*/
 	drop = pie_enqueue(&flows[idx], m, si);
 
-	printf("FQ_PIE drop: %d", drop);
+	printf("enqueue:FQ_PIE drop 0 is success and 1 is drop : %d \n", drop);
 
 	/* pie unable to timestamp a packet */ 
 	if (drop)
@@ -901,7 +901,7 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 		flows[idx].active = 1;
 	}
 
-	printf("FQ_PIE flows active: %d", flows[idx].active);
+	printf("enqueue: if idx FQ_PIE flows active: %d \n", flows[idx].active);
 
 	/* check the limit for all queues and remove a packet from the
 	 * largest one 
@@ -911,6 +911,7 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 		for (maxidx = 0; maxidx < schk->cfg.flows_cnt; maxidx++)
 			if (flows[maxidx].active)
 				break;
+		printf("enqueue: FQ_PIE enqueue firsta ctive flow : %d \n", maxidx);
 		if (maxidx < schk->cfg.flows_cnt) {
 			/* find the largest sub- queue */
 			for (i = maxidx + 1; i < schk->cfg.flows_cnt; i++) 
@@ -918,10 +919,13 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 					flows[maxidx].stats.length)
 					maxidx = i;
 			pie_drop_head(&flows[maxidx], si);
+			printf("enqueue: FQ_PIE drop head of flow no. : %d \n", maxidx);
+			printf("enqueue: pie drop head success \n")
 			drop = 1;
 		}
 	}
-	printf("End of FQ_PIE_enqueue");
+	printf("enqueue:FQ_PIE drop 2 : %d \n", drop);
+	printf("enqueue:End of FQ_PIE_enqueue \n");
 
 	return drop;
 }
@@ -943,7 +947,7 @@ fq_pie_dequeue(struct dn_sch_inst *_si)
 	si = (struct fq_pie_si *)_si;
 	schk = (struct fq_pie_schk *)(si->_si.sched+1);
 	param = &schk->cfg;
-	printf("FQ_PIE dequeue start");
+	printf("dequeue: FQ_PIE dequeue start \n");
 
 	do {
 		/* select a list to start with */
@@ -967,7 +971,7 @@ fq_pie_dequeue(struct dn_sch_inst *_si)
 			 */
 			if (f->deficit < 0) {
 				 f->deficit += param->quantum;
-				 printf("fq pie deficit dequeue");
+				 printf("dequeue: fq pie deficit dequeue \n");
 				 STAILQ_REMOVE_HEAD(fq_pie_flowlist, flowchain);
 				 STAILQ_INSERT_TAIL(&si->oldflows, f, flowchain);
 			 } else 
@@ -983,10 +987,11 @@ fq_pie_dequeue(struct dn_sch_inst *_si)
 		/* Dequeue a packet from the selected flow */
 		mbuf = pie_dequeue(f, si);
 
-		printf("Dequeue successfull");
+		
 
 		/* pie did not return a packet */
 		if (!mbuf) {
+			printf("dequeue: Dequeue packet unsuccessfull \n");
 			/* If the selected flow belongs to new flows list, then move 
 			 * it to the tail of old flows list. Otherwise, deactivate it and
 			 * remove it from the old list and
@@ -994,22 +999,28 @@ fq_pie_dequeue(struct dn_sch_inst *_si)
 			if (fq_pie_flowlist == &si->newflows) {
 				STAILQ_REMOVE_HEAD(fq_pie_flowlist, flowchain);
 				STAILQ_INSERT_TAIL(&si->oldflows, f, flowchain);
+				printf("dequeue: Moved new queue to old queue list \n")
 			}	else {
 				f->active = 0;
 				fq_deactivate_pie(&f->pst);
 				STAILQ_REMOVE_HEAD(fq_pie_flowlist, flowchain);
+				printf("dequeue: deactivate oldeflow or old queue \n")
 			}
 			/* start again */
 			continue;
 		}
+		printf("dequeue: Dequeue packetsuccessfull \n");
 
 		/* we have a packet to return, 
 		 * update flow deficit and return the packet*/
 		f->deficit -= mbuf->m_pkthdr.len;
-		printf("FQ_PIE dequeue end and deficit updated");
+		printf("dequeue: FQ_PIE dequeue end and deficit updated \n");
+		printf("dequeue: successfull")
 		return mbuf;
 
 	} while (1);
+
+	printf("dequeue: Dequeue unsucessfull \n");
 
 	/* unreachable point */
 	return NULL;
@@ -1033,6 +1044,8 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 
 	if(si->si_extra) {
 		D("si already configured!");
+		printf("si already configured! \n")
+		printf()
 		return 0;
 	}
 
@@ -1047,6 +1060,7 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 		 M_DUMMYNET, M_NOWAIT | M_ZERO);
 	if (si->si_extra == NULL) {
 		D("cannot allocate memory for fq_pie si extra vars");
+		printf("cannot allocate memory for fq_pie si extra vars \n")
 		return ENOMEM ; 
 	}
 	/* allocate memory for flows array */
@@ -1057,6 +1071,7 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 		free(si->si_extra, M_DUMMYNET);
 		si->si_extra = NULL;
 		D("cannot allocate memory for fq_pie flows");
+		printf("cannot allocate memory for fq_pie flows \n"):
 		return ENOMEM ; 
 	}
 
@@ -1079,6 +1094,8 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 	fq_pie_desc.ref_count++;
 	dummynet_sched_unlock();
 
+	printf("Successfull new sched")
+
 	return 0;
 }
 
@@ -1099,6 +1116,7 @@ fq_pie_free_sched(struct dn_sch_inst *_si)
 	for (i = 0; i < schk->cfg.flows_cnt; i++) {
 		pie_cleanup(&flows[i]);
 	}
+	printf("fq_pie_free_sched executed \n")
 	si->si_extra = NULL;
 	return 0;
 }
@@ -1186,6 +1204,7 @@ fq_pie_config(struct dn_schk *_schk)
 	}
 	else {
 		D("Wrong parameters for fq_pie scheduler");
+		printf("Wrong parameters for fq_pie scheduler \n")
 		return 1;
 	}
 
