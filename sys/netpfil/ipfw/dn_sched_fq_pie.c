@@ -563,12 +563,12 @@ pie_init(struct fq_pie_flow *q, struct fq_pie_schk *fqpie_schk)
 {
 	struct pie_status *pst=&q->pst;
 	struct dn_aqm_pie_parms *pprms = pst->parms;
-	printf("pie_init: STARTED");
+	//printf("pie_init: STARTED");
 
 	int err = 0;
 	if (!pprms){
 		D("AQM_PIE is not configured");
-		printf("pie_init: AQM_PIE is not configured \n");
+		//printf("pie_init: AQM_PIE is not configured \n");
 		err = EINVAL;
 	} else {
 		q->psi_extra->nr_active_q++;
@@ -578,14 +578,14 @@ pie_init(struct fq_pie_flow *q, struct fq_pie_schk *fqpie_schk)
 		pst->one_third_q_size = (fqpie_schk->cfg.limit / 
 			fqpie_schk->cfg.flows_cnt) / 3;
 		
-		printf("pie_init: 1/3 queue size calculated here \n");
+		//printf("pie_init: 1/3 queue size calculated here \n");
 
 		mtx_init(&pst->lock_mtx, "mtx_pie", NULL, MTX_DEF);
 		callout_init_mtx(&pst->aqm_pie_callout, &pst->lock_mtx,
 			CALLOUT_RETURNUNLOCKED);
 	}
 
-	printf("pie_init: ENDED \n");
+	//printf("pie_init: ENDED \n");
 
 	return err;
 }
@@ -601,7 +601,7 @@ fqpie_callout_cleanup(void *x)
 	struct fq_pie_flow *q = x;
 	struct pie_status *pst = &q->pst;
 	struct fq_pie_si_extra *psi_extra;
-	printf("fqpie_callout_cleanup: STARTED \n");
+	//printf("fqpie_callout_cleanup: STARTED \n");
 
 	mtx_unlock(&pst->lock_mtx);
 	mtx_destroy(&pst->lock_mtx);
@@ -618,7 +618,7 @@ fqpie_callout_cleanup(void *x)
 	}
 	
 	dummynet_sched_unlock();
-	printf("fqpie_callout_cleanup: ENDED \n");
+	//printf("fqpie_callout_cleanup: ENDED \n");
 }
 
 /* 
@@ -628,14 +628,14 @@ fqpie_callout_cleanup(void *x)
 static int
 pie_cleanup(struct fq_pie_flow *q)
 {
-	printf("fqpie_callout_cleanup: STARTED \n");
+	//printf("fqpie_callout_cleanup: STARTED \n");
 	struct pie_status *pst  = &q->pst;
 
 	mtx_lock(&pst->lock_mtx);
 	callout_reset_sbt(&pst->aqm_pie_callout,
 		SBT_1US, 0, fqpie_callout_cleanup, q, 0);
 	mtx_unlock(&pst->lock_mtx);
-	printf("fqpie_callout_cleanup: ENDED \n");
+	//printf("fqpie_callout_cleanup: ENDED \n");
 	return 0;
 }
 
