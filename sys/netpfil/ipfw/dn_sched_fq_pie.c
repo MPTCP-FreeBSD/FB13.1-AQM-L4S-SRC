@@ -344,7 +344,7 @@ fq_pie_extract_head(struct fq_pie_flow *q, aqm_time_t *pkt_ts,
 next:	m = q->mq.head;
 	if (m == NULL)
 		return m;
-		printf("fq_pie_extract_head:Packet is not null");
+	printf("fq_pie_extract_head:Packet is not null");
 	q->mq.head = m->m_nextpkt;
 
 	fq_update_stats(q, si, -m->m_pkthdr.len, 0);
@@ -772,7 +772,7 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 	if (!(pst->sflags & PIE_ACTIVE) && q->stats.len_bytes >= 
 		pst->one_third_q_size) {
 		fq_activate_pie(q);
-		pritnf("pie_enqueue: fq_activate_pie(q) when queue is 1/3 full \n");
+		printf("pie_enqueue: fq_activate_pie(q) when queue is 1/3 full \n");
 	}
 
 	/*  reset burst tolerance and optinally turn PIE off*/
@@ -783,7 +783,7 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 			pst->burst_allowance = pprms->max_burst;
 		if (pprms->flags & PIE_ON_OFF_MODE_ENABLED && q->stats.len_bytes<=0)
 			fq_deactivate_pie(pst);
-			printf("pie_enqueue: fq_deactivate_pie successfully ran \n");
+		printf("pie_enqueue: fq_deactivate_pie successfully ran \n");
 
 	}
 
@@ -990,7 +990,7 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 					maxidx = i;
 			pie_drop_head(&flows[maxidx], si);
 			printf("enqueue: FQ_PIE drop head of flow no. : %d \n", maxidx);
-			printf("enqueue: pie drop head success \n")
+			printf("enqueue: pie drop head success \n");
 			drop = 1;
 		}
 	}
@@ -1114,8 +1114,7 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 
 	if(si->si_extra) {
 		D("si already configured!");
-		printf("fq_pie_new_sched:si already configured! \n")
-		printf()
+		printf("fq_pie_new_sched:si already configured! \n");
 		return 0;
 	}
 
