@@ -348,7 +348,7 @@ next:	m = q->mq.head;
 	q->mq.head = m->m_nextpkt;
 
 	fq_update_stats(q, si, -m->m_pkthdr.len, 0);
-	printf("fq_pie_extract_head:fq_update_state executed")
+	printf("fq_pie_extract_head:fq_update_state executed");
 
 	if (si->main_q.ni.length == 0) /* queue is now idle */
 			si->main_q.q_time = V_dn_cfg.curr_time;
@@ -1069,12 +1069,12 @@ fq_pie_dequeue(struct dn_sch_inst *_si)
 			if (fq_pie_flowlist == &si->newflows) {
 				STAILQ_REMOVE_HEAD(fq_pie_flowlist, flowchain);
 				STAILQ_INSERT_TAIL(&si->oldflows, f, flowchain);
-				printf("dequeue: Moved new queue to old queue list \n")
+				printf("dequeue: Moved new queue to old queue list \n");
 			}	else {
 				f->active = 0;
 				fq_deactivate_pie(&f->pst);
 				STAILQ_REMOVE_HEAD(fq_pie_flowlist, flowchain);
-				printf("dequeue: deactivate oldeflow or old queue \n")
+				printf("dequeue: deactivate oldeflow or old queue \n");
 			}
 			/* start again */
 			continue;
@@ -1085,7 +1085,7 @@ fq_pie_dequeue(struct dn_sch_inst *_si)
 		 * update flow deficit and return the packet*/
 		f->deficit -= mbuf->m_pkthdr.len;
 		printf("dequeue: FQ_PIE dequeue end and deficit updated \n");
-		printf("dequeue: successfull")
+		printf("dequeue: successfull");
 		return mbuf;
 
 	} while (1);
@@ -1130,7 +1130,7 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 		 M_DUMMYNET, M_NOWAIT | M_ZERO);
 	if (si->si_extra == NULL) {
 		D("cannot allocate memory for fq_pie si extra vars");
-		printf("fq_pie_new_sched:cannot allocate memory for fq_pie si extra vars \n")
+		printf("fq_pie_new_sched:cannot allocate memory for fq_pie si extra vars \n");
 		return ENOMEM ; 
 	}
 	/* allocate memory for flows array */
@@ -1141,7 +1141,7 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 		free(si->si_extra, M_DUMMYNET);
 		si->si_extra = NULL;
 		D("cannot allocate memory for fq_pie flows");
-		printf("fq_pie_new_sched:cannot allocate memory for fq_pie flows \n"):
+		printf("fq_pie_new_sched:cannot allocate memory for fq_pie flows \n");
 		return ENOMEM ; 
 	}
 
@@ -1164,7 +1164,7 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 	fq_pie_desc.ref_count++;
 	dummynet_sched_unlock();
 
-	printf("fq_pie_new_sched:Successfull new sched \n")
+	printf("fq_pie_new_sched:Successfull new sched \n");
 
 	return 0;
 }
@@ -1186,7 +1186,7 @@ fq_pie_free_sched(struct dn_sch_inst *_si)
 	for (i = 0; i < schk->cfg.flows_cnt; i++) {
 		pie_cleanup(&flows[i]);
 	}
-	printf("fq_pie_free_sched executed \n")
+	printf("fq_pie_free_sched executed \n");
 	si->si_extra = NULL;
 	return 0;
 }
@@ -1274,7 +1274,7 @@ fq_pie_config(struct dn_schk *_schk)
 	}
 	else {
 		D("Wrong parameters for fq_pie scheduler");
-		printf("Wrong parameters for fq_pie scheduler \n")
+		printf("Wrong parameters for fq_pie scheduler \n");
 		return 1;
 	}
 
