@@ -344,11 +344,11 @@ fq_pie_extract_head(struct fq_pie_flow *q, aqm_time_t *pkt_ts,
 next:	m = q->mq.head;
 	if (m == NULL)
 		return m;
-	printf("fq_pie_extract_head:Packet is not null");
+	printf("fq_pie_extract_head:Packet is not null \n");
 	q->mq.head = m->m_nextpkt;
 
 	fq_update_stats(q, si, -m->m_pkthdr.len, 0);
-	printf("fq_pie_extract_head:fq_update_state executed");
+	printf("fq_pie_extract_head:fq_update_state executed \n");
 
 	if (si->main_q.ni.length == 0) /* queue is now idle */
 			si->main_q.q_time = V_dn_cfg.curr_time;
@@ -359,17 +359,17 @@ next:	m = q->mq.head;
 		mtag = m_tag_locate(m, MTAG_ABI_COMPAT, DN_AQM_MTAG_TS, NULL);
 		if (mtag == NULL){
 			D("PIE timestamp mtag not found!");
-			printf("fq_pie_extract_head:PIE timestamp mtag not found!");
+			printf("fq_pie_extract_head:PIE timestamp mtag not found! \n");
 			*pkt_ts = 0;
 		} else {
-			printf("fq_pie_extract_head:PIE timestamp mtag found!");
+			printf("fq_pie_extract_head:PIE timestamp mtag found! \n");
 			*pkt_ts = *(aqm_time_t *)(mtag + 1);
 			m_tag_delete(m,mtag); 
 		}
 	}
 	if (m->m_pkthdr.rcvif != NULL &&
 	    __predict_false(m_rcvif_restore(m) == NULL)) {
-		printf("fq_pie_extract_head:__predict_false(m_rcvif_restore(m) == NULL)");
+		printf("fq_pie_extract_head:__predict_false(m_rcvif_restore(m) == NULL) \n");
 		m_freem(m);
 		goto next;
 	}
@@ -568,7 +568,7 @@ pie_init(struct fq_pie_flow *q, struct fq_pie_schk *fqpie_schk)
 	int err = 0;
 	if (!pprms){
 		D("AQM_PIE is not configured");
-		printf("pie_init: AQM_PIE is not configured");
+		printf("pie_init: AQM_PIE is not configured \n");
 		err = EINVAL;
 	} else {
 		q->psi_extra->nr_active_q++;
@@ -578,14 +578,14 @@ pie_init(struct fq_pie_flow *q, struct fq_pie_schk *fqpie_schk)
 		pst->one_third_q_size = (fqpie_schk->cfg.limit / 
 			fqpie_schk->cfg.flows_cnt) / 3;
 		
-		printf("pie_init: 1/3 queue size calculated here");
+		printf("pie_init: 1/3 queue size calculated here \n");
 
 		mtx_init(&pst->lock_mtx, "mtx_pie", NULL, MTX_DEF);
 		callout_init_mtx(&pst->aqm_pie_callout, &pst->lock_mtx,
 			CALLOUT_RETURNUNLOCKED);
 	}
 
-	printf("pie_init: ENDED");
+	printf("pie_init: ENDED \n");
 
 	return err;
 }
@@ -601,7 +601,7 @@ fqpie_callout_cleanup(void *x)
 	struct fq_pie_flow *q = x;
 	struct pie_status *pst = &q->pst;
 	struct fq_pie_si_extra *psi_extra;
-	printf("fqpie_callout_cleanup: STARTED");
+	printf("fqpie_callout_cleanup: STARTED \n");
 
 	mtx_unlock(&pst->lock_mtx);
 	mtx_destroy(&pst->lock_mtx);
@@ -618,7 +618,7 @@ fqpie_callout_cleanup(void *x)
 	}
 	
 	dummynet_sched_unlock();
-	printf("fqpie_callout_cleanup: ENDED");
+	printf("fqpie_callout_cleanup: ENDED \n");
 }
 
 /* 
@@ -628,14 +628,14 @@ fqpie_callout_cleanup(void *x)
 static int
 pie_cleanup(struct fq_pie_flow *q)
 {
-	printf("fqpie_callout_cleanup: STARTED");
+	printf("fqpie_callout_cleanup: STARTED \n");
 	struct pie_status *pst  = &q->pst;
 
 	mtx_lock(&pst->lock_mtx);
 	callout_reset_sbt(&pst->aqm_pie_callout,
 		SBT_1US, 0, fqpie_callout_cleanup, q, 0);
 	mtx_unlock(&pst->lock_mtx);
-	printf("fqpie_callout_cleanup: ENDED");
+	printf("fqpie_callout_cleanup: ENDED \n");
 	return 0;
 }
 
