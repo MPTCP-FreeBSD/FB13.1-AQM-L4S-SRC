@@ -339,14 +339,16 @@ fq_pie_extract_head(struct fq_pie_flow *q, aqm_time_t *pkt_ts,
 	struct fq_pie_si *si, int getts)
 {
 	struct mbuf *m;
-	printf("Start fq_pie_extract_head \n");
+	printf("fq_pie_extract_head:Start fq_pie_extract_head \n");
 
 next:	m = q->mq.head;
 	if (m == NULL)
 		return m;
+		printf("fq_pie_extract_head:Packet is not null");
 	q->mq.head = m->m_nextpkt;
 
 	fq_update_stats(q, si, -m->m_pkthdr.len, 0);
+	printf("fq_pie_extract_head:fq_update_state executed")
 
 	if (si->main_q.ni.length == 0) /* queue is now idle */
 			si->main_q.q_time = V_dn_cfg.curr_time;
@@ -357,14 +359,17 @@ next:	m = q->mq.head;
 		mtag = m_tag_locate(m, MTAG_ABI_COMPAT, DN_AQM_MTAG_TS, NULL);
 		if (mtag == NULL){
 			D("PIE timestamp mtag not found!");
+			printf("fq_pie_extract_head:PIE timestamp mtag not found!");
 			*pkt_ts = 0;
 		} else {
+			printf("fq_pie_extract_head:PIE timestamp mtag found!");
 			*pkt_ts = *(aqm_time_t *)(mtag + 1);
 			m_tag_delete(m,mtag); 
 		}
 	}
 	if (m->m_pkthdr.rcvif != NULL &&
 	    __predict_false(m_rcvif_restore(m) == NULL)) {
+		printf("fq_pie_extract_head:__predict_false(m_rcvif_restore(m) == NULL)");
 		m_freem(m);
 		goto next;
 	}
@@ -384,6 +389,8 @@ fq_calculate_drop_prob(void *x)
 	struct dn_aqm_pie_parms *pprms; 
 	int64_t p, prob, oldprob;
 	int p_isneg;
+
+	printf("fq_calculate_drop_prob: STARTED \n");
 
 	pprms = pst->parms;
 	prob = pst->drop_prob;
@@ -439,6 +446,7 @@ fq_calculate_drop_prob(void *x)
 		if (prob > oldprob) {
 			prob= 0;
 			D("underflow");
+			printf("fq_calculate_drop_prob: underflow \n");
 		}
 	} else {
 		/* Cap Drop adjustment */
@@ -446,6 +454,7 @@ fq_calculate_drop_prob(void *x)
 		    prob >= PIE_MAX_PROB / 10 &&
 		    p > PIE_MAX_PROB / 50 ) {
 			p = PIE_MAX_PROB / 50;
+			printf("fq_calculate_drop_prob: Cap Drop Adjustment \n");
 		}
 
 		prob = prob + p;
@@ -453,6 +462,7 @@ fq_calculate_drop_prob(void *x)
 		/* check for multiplication overflow */
 		if (prob<oldprob) {
 			D("overflow");
+			printf("fq_calculate_drop_prob: overflow \n");
 			prob= PIE_MAX_PROB;
 		}
 	}
@@ -462,6 +472,7 @@ fq_calculate_drop_prob(void *x)
 	 * and restrict it to range 0 to PIE_MAX_PROB
 	 */
 	if (prob < 0) {
+		printf("fq_calculate_drop_prob: if prob<0 prob=0 \n");		
 		prob = 0;
 	} else {
 		if (pst->current_qdelay == 0 && pst->qdelay_old == 0) {
@@ -492,6 +503,8 @@ fq_calculate_drop_prob(void *x)
 		(uint64_t)pprms->tupdate * SBT_1US,
 		0, fq_calculate_drop_prob, q, 0);
 
+	printf("fq_calculate_drop_prob: ENDED \n");
+
 	mtx_unlock(&pst->lock_mtx);
 }
 
@@ -507,6 +520,8 @@ fq_activate_pie(struct fq_pie_flow *q)
 	mtx_lock(&pst->lock_mtx);
 	pprms = pst->parms;
 
+	printf("fq_activate_pie: STARTED \n");
+
 	pprms = pst->parms;
 	pst->drop_prob = 0;
 	pst->qdelay_old = 0;
@@ -520,6 +535,8 @@ fq_activate_pie(struct fq_pie_flow *q)
 	callout_reset_sbt(&pst->aqm_pie_callout,
 		(uint64_t)pprms->tupdate * SBT_1US,
 		0, fq_calculate_drop_prob, q, 0);
+	
+	printf("fq_activate_pie: ENDED \n");
 
 	mtx_unlock(&pst->lock_mtx);
 }
@@ -534,6 +551,7 @@ fq_deactivate_pie(struct pie_status *pst)
 	pst->sflags &= ~(PIE_ACTIVE | PIE_INMEASUREMENT);
 	callout_stop(&pst->aqm_pie_callout);
 	//D("PIE Deactivated");
+	printf("fq_deactivate_pie: SUCCESS \n");
 	mtx_unlock(&pst->lock_mtx);
 }
 
@@ -545,10 +563,12 @@ pie_init(struct fq_pie_flow *q, struct fq_pie_schk *fqpie_schk)
 {
 	struct pie_status *pst=&q->pst;
 	struct dn_aqm_pie_parms *pprms = pst->parms;
+	printf("pie_init: STARTED");
 
 	int err = 0;
 	if (!pprms){
 		D("AQM_PIE is not configured");
+		printf("pie_init: AQM_PIE is not configured");
 		err = EINVAL;
 	} else {
 		q->psi_extra->nr_active_q++;
@@ -557,11 +577,15 @@ pie_init(struct fq_pie_flow *q, struct fq_pie_schk *fqpie_schk)
 		// XXX limit divided by number of queues divided by 3 ??? 
 		pst->one_third_q_size = (fqpie_schk->cfg.limit / 
 			fqpie_schk->cfg.flows_cnt) / 3;
+		
+		printf("pie_init: 1/3 queue size calculated here");
 
 		mtx_init(&pst->lock_mtx, "mtx_pie", NULL, MTX_DEF);
 		callout_init_mtx(&pst->aqm_pie_callout, &pst->lock_mtx,
 			CALLOUT_RETURNUNLOCKED);
 	}
+
+	printf("pie_init: ENDED");
 
 	return err;
 }
@@ -577,6 +601,7 @@ fqpie_callout_cleanup(void *x)
 	struct fq_pie_flow *q = x;
 	struct pie_status *pst = &q->pst;
 	struct fq_pie_si_extra *psi_extra;
+	printf("fqpie_callout_cleanup: STARTED");
 
 	mtx_unlock(&pst->lock_mtx);
 	mtx_destroy(&pst->lock_mtx);
@@ -591,7 +616,9 @@ fqpie_callout_cleanup(void *x)
 		free(psi_extra, M_DUMMYNET);
 		fq_pie_desc.ref_count--;
 	}
+	
 	dummynet_sched_unlock();
+	printf("fqpie_callout_cleanup: ENDED");
 }
 
 /* 
@@ -601,12 +628,14 @@ fqpie_callout_cleanup(void *x)
 static int
 pie_cleanup(struct fq_pie_flow *q)
 {
+	printf("fqpie_callout_cleanup: STARTED");
 	struct pie_status *pst  = &q->pst;
 
 	mtx_lock(&pst->lock_mtx);
 	callout_reset_sbt(&pst->aqm_pie_callout,
 		SBT_1US, 0, fqpie_callout_cleanup, q, 0);
 	mtx_unlock(&pst->lock_mtx);
+	printf("fqpie_callout_cleanup: ENDED");
 	return 0;
 }
 
@@ -617,6 +646,7 @@ pie_cleanup(struct fq_pie_flow *q)
  static struct mbuf *
 pie_dequeue(struct fq_pie_flow *q, struct fq_pie_si *si)
 {
+	printf("pie_dequeue: pie_dequeue started \n");
 	struct mbuf *m;
 	struct dn_aqm_pie_parms *pprms;
 	struct pie_status *pst;
@@ -630,38 +660,52 @@ pie_dequeue(struct fq_pie_flow *q, struct fq_pie_si *si)
 	/*we extarct packet ts only when Departure Rate Estimation dis not used*/
 	m = fq_pie_extract_head(q, &pkt_ts, si, 
 		!(pprms->flags & PIE_DEPRATEEST_ENABLED));
-
+	
+	printf("pie_dequeue: fq_pie_extract_head execuetd \n");
+	
 	if (!m || !(pst->sflags & PIE_ACTIVE))
 		return m;
+	
+	printf("pie_dequeue: pie_dequeue started \n");
 
 	now = AQM_UNOW;
 	if (pprms->flags & PIE_DEPRATEEST_ENABLED) {
 		/* calculate average depature time */
+		printf("pie_dequeue: calculating average departure time \n");
 		if(pst->sflags & PIE_INMEASUREMENT) {
 			pst->dq_count += m->m_pkthdr.len;
+			printf("pie_dequeue: adding m_pkthdr.len to dq_count \n");
+			//m_pkthdr- paket header
 
 			if (pst->dq_count >= PIE_DQ_THRESHOLD) {
 				dq_time = now - pst->measurement_start;
+				printf("pie_dequeue: pst->dq_count >= PIE_DQ_THRESHOLD \n");
 
 				/* 
 				 * if we don't have old avg dq_time i.e PIE is (re)initialized, 
 				 * don't use weight to calculate new avg_dq_time
 				 */
 				if(pst->avg_dq_time == 0)
+				{
 					pst->avg_dq_time = dq_time;
+					printf("pie_dequeue: if we don't have old avg dq_time i.e PIE is (re)initialized, dont use weight to calculate new avg_dq_time \n");
+				}
 				else {
 					/*
 					 * weight = PIE_DQ_THRESHOLD/2^6, but we scaled
 					 * weight by 2^8. Thus, scaled
 					 * weight = PIE_DQ_THRESHOLD /2^8
 					 * */
+					printf("pie_dequeue: we have old avg dq_time using weight to calculate avg_dq_time \n");
 					w = PIE_DQ_THRESHOLD >> 8;
 					pst->avg_dq_time = (dq_time* w
 						+ (pst->avg_dq_time * ((1L << 8) - w))) >> 8;
 					pst->sflags &= ~PIE_INMEASUREMENT;
 				}
 			}
+			printf("pie_dequeue: adding m_pkthdr.len to dq_count ENDED \n");
 		}
+		printf("pie_dequeue: calculating average departure time ENDED \n");
 
 		/*
 		 * Start new measurement cycle when the queue has
@@ -669,15 +713,21 @@ pie_dequeue(struct fq_pie_flow *q, struct fq_pie_si *si)
 		 */
 		if(!(pst->sflags & PIE_INMEASUREMENT) &&
 			q->stats.len_bytes >= PIE_DQ_THRESHOLD) {
+			printf("pie_dequeue: Start new measurement cycle when the queue has PIE_DQ_THRESHOLD worth of bytes\n");
 			pst->sflags |= PIE_INMEASUREMENT;
 			pst->measurement_start = now;
 			pst->dq_count = 0;
 		}
+		printf("pie_dequeue: Start new measurement cycle when the queue has PIE_DQ_THRESHOLD worth of bytes ENDED\n");
 	}
 	/* Optionally, use packet timestamp to estimate queue delay */
 	else
+	{
+		printf("pie_dequeue: We are using packet timestamp to estimate queue delay \n");
 		pst->current_qdelay = now - pkt_ts;
-
+	}
+	printf("pie_dequeue: ENDED \n");
+	
 	return m;
 }
 
@@ -700,6 +750,8 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 	pprms = pst->parms;
 	t = ENQUE;
 
+	printf("pie_enqueue: STARTED \n");
+
 	/* drop/mark the packet when PIE is active and burst time elapsed */
 	if (pst->sflags & PIE_ACTIVE && pst->burst_allowance == 0
 		&& drop_early(pst, q->stats.len_bytes) == DROP) {
@@ -707,6 +759,7 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 			 * if drop_prob over ECN threshold, drop the packet 
 			 * otherwise mark and enqueue it.
 			 */
+			printf("pie_enqueue: drop/mark the packet when PIE is active and burst time elapsed \n");
 			if (pprms->flags & PIE_ECN_ENABLED && pst->drop_prob < 
 				(pprms->max_ecnth << (PIE_PROB_BITS - PIE_FIX_POINT_BITS))
 				&& ecn_mark(m))
@@ -719,41 +772,50 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 	if (!(pst->sflags & PIE_ACTIVE) && q->stats.len_bytes >= 
 		pst->one_third_q_size) {
 		fq_activate_pie(q);
+		pritnf("pie_enqueue: fq_activate_pie(q) when queue is 1/3 full \n");
 	}
 
 	/*  reset burst tolerance and optinally turn PIE off*/
 	if (pst->drop_prob == 0 && pst->current_qdelay < (pprms->qdelay_ref >> 1)
 		&& pst->qdelay_old < (pprms->qdelay_ref >> 1)) {
 			
+			printf("pie_enqueue: reset burst tolerance and optinally turn PIE off \n");
 			pst->burst_allowance = pprms->max_burst;
 		if (pprms->flags & PIE_ON_OFF_MODE_ENABLED && q->stats.len_bytes<=0)
 			fq_deactivate_pie(pst);
+			printf("pie_enqueue: fq_deactivate_pie successfully ran \n");
+
 	}
 
 	/* Use timestamp if Departure Rate Estimation mode is disabled */
 	if (t != DROP && !(pprms->flags & PIE_DEPRATEEST_ENABLED)) {
 		/* Add TS to mbuf as a TAG */
 		struct m_tag *mtag;
+		printf("pie_enqueue: Use timestamp if Departure Rate Estimation mode is disabled \n");		
 		mtag = m_tag_locate(m, MTAG_ABI_COMPAT, DN_AQM_MTAG_TS, NULL);
 		if (mtag == NULL)
 			mtag = m_tag_alloc(MTAG_ABI_COMPAT, DN_AQM_MTAG_TS,
 				sizeof(aqm_time_t), M_NOWAIT);
 		if (mtag == NULL) {
+			printf("pie_enqueue: t=Drop");
 			t = DROP;
 		} else {
 			*(aqm_time_t *)(mtag + 1) = AQM_UNOW;
 			m_tag_prepend(m, mtag);
+			printf("pie_enqueue: Add TS to mbuf as a TAG \n");
 		}
 	}
 
 	if (t != DROP) {
 		mq_append(&q->mq, m);
+		printf("pie_enqueue: mq_append(&q->mq, m); success \n");
 		fq_update_stats(q, si, len, 0);
 		return 0;
 	} else {
 		fq_update_stats(q, si, len, 1);
 		pst->accu_prob = 0;
 		FREE_PKT(m);
+		printf("pie_enqueue: acc_prob=0 and packet freed \n");
 		return 1;
 	}
 
@@ -764,11 +826,13 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 static void
 pie_drop_head(struct fq_pie_flow *q, struct fq_pie_si *si)
 {
+	printf("pie_drop_head: Started \n");
 	struct mbuf *m = q->mq.head;
 
 	if (m == NULL)
 		return;
 	q->mq.head = m->m_nextpkt;
+	printf("pie_drop_head: replaced head packet \n");
 
 	fq_update_stats(q, si, -m->m_pkthdr.len, 1);
 
@@ -778,6 +842,7 @@ pie_drop_head(struct fq_pie_flow *q, struct fq_pie_si *si)
 	q->pst.accu_prob = 0;
 
 	FREE_PKT(m);
+	printf("pie_drop_head: reset accu_prob to 0 ENDED \n");
 }
 
 /*
@@ -800,6 +865,7 @@ fq_pie_classify_flow(struct mbuf *m, uint16_t fcount, struct fq_pie_si *si)
 	struct ip6_hdr *ip6;
 	int isip6;
 	isip6 = (ip->ip_v == 6);
+	printf("fq_pie_classify_flow: STARTED \n");
 
 	if(isip6) {
 		ip6 = (struct ip6_hdr *)ip;
@@ -829,6 +895,8 @@ fq_pie_classify_flow(struct mbuf *m, uint16_t fcount, struct fq_pie_si *si)
 	} 
 //#endif
 
+	printf("fq_pie_classify_flow: Went to IPV4 \n");
+
 	/* IPv4 */
 	*((uint8_t *) &tuple[0]) = ip->ip_p;
 	*((uint32_t *) &tuple[1]) = si->perturbation;
@@ -851,6 +919,8 @@ fq_pie_classify_flow(struct mbuf *m, uint16_t fcount, struct fq_pie_si *si)
 			memset(&tuple[13], 0, 4);
 	}
 	hash = jenkins_hash(tuple, 17, HASHINIT) % fcount;
+
+	printf("fq_pie_classify_flow: ENDED \n");
 
 	return hash;
 }
@@ -1044,7 +1114,7 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 
 	if(si->si_extra) {
 		D("si already configured!");
-		printf("si already configured! \n")
+		printf("fq_pie_new_sched:si already configured! \n")
 		printf()
 		return 0;
 	}
@@ -1060,7 +1130,7 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 		 M_DUMMYNET, M_NOWAIT | M_ZERO);
 	if (si->si_extra == NULL) {
 		D("cannot allocate memory for fq_pie si extra vars");
-		printf("cannot allocate memory for fq_pie si extra vars \n")
+		printf("fq_pie_new_sched:cannot allocate memory for fq_pie si extra vars \n")
 		return ENOMEM ; 
 	}
 	/* allocate memory for flows array */
@@ -1071,7 +1141,7 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 		free(si->si_extra, M_DUMMYNET);
 		si->si_extra = NULL;
 		D("cannot allocate memory for fq_pie flows");
-		printf("cannot allocate memory for fq_pie flows \n"):
+		printf("fq_pie_new_sched:cannot allocate memory for fq_pie flows \n"):
 		return ENOMEM ; 
 	}
 
@@ -1094,7 +1164,7 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 	fq_pie_desc.ref_count++;
 	dummynet_sched_unlock();
 
-	printf("Successfull new sched")
+	printf("fq_pie_new_sched:Successfull new sched \n")
 
 	return 0;
 }

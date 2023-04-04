@@ -75,11 +75,11 @@ struct pie_status{
 	uint32_t	drop_prob;
 	aqm_time_t	current_qdelay;
 	aqm_time_t	qdelay_old;
-	uint64_t	accu_prob;
+	uint64_t	accu_prob; //represents the accumulated probability of dropping a packet since the last packet was dropped
 	aqm_time_t	measurement_start;
 	aqm_time_t	avg_dq_time;
-	uint32_t	dq_count;
-	uint32_t	sflags;
+	uint32_t	dq_count; //represents the number of packets that are currently queued in the Dummynet queue
+	uint32_t	sflags; //s_flags is a field in the socket structure that contains various socket flags and options.
 	struct dn_aqm_pie_parms *parms;	/* pointer to PIE configurations */
 	/* pointer to parent queue of FQ-PIE sub-queues, or  queue of owner fs. */
 	struct dn_queue	*pq;	
