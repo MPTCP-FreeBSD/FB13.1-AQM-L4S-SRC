@@ -664,7 +664,12 @@ pie_dequeue(struct fq_pie_flow *q, struct fq_pie_si *si)
 	printf("pie_dequeue: fq_pie_extract_head execuetd \n");
 	
 	if (!m || !(pst->sflags & PIE_ACTIVE))
+	{
+		printf("pie_dequeue: !m %d \n",!m);
+		printf("pie_dequeue: PIE_ACTIVE %d \n",PIE_ACTIVE);
 		return m;
+	}
+		
 	
 	printf("pie_dequeue: pie_dequeue started \n");
 
