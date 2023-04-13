@@ -329,6 +329,8 @@ fq_update_stats(struct fq_pie_flow *q, struct fq_pie_si *si, int len,
 
 }
 
+
+
 /*
  * Extract a packet from the head of sub-queue 'q'
  * Return a packet or NULL if the queue is empty.
@@ -338,12 +340,13 @@ __inline static struct mbuf *
 fq_pie_extract_head(struct fq_pie_flow *q, aqm_time_t *pkt_ts,
 	struct fq_pie_si *si, int getts)
 {
-	struct mbuf *m;
+	struct mbuf *m = q->mq.head;
+	printf("fq_pie_extract_head:Start fq_pie_extract_head \n");
 
-next:	m = q->mq.head;
 	if (m == NULL)
 		return m;
 	q->mq.head = m->m_nextpkt;
+	printf("fq_pie_extract_head:Packet is not null \n");
 
 	fq_update_stats(q, si, -m->m_pkthdr.len, 0);
 
@@ -362,13 +365,50 @@ next:	m = q->mq.head;
 			m_tag_delete(m,mtag); 
 		}
 	}
-	if (m->m_pkthdr.rcvif != NULL &&
-	    __predict_false(m_rcvif_restore(m) == NULL)) {
-		m_freem(m);
-		goto next;
-	}
+	printf("fq_pie_extract_head:Start fq_pie_extract_head ENDED\n");
 	return m;
 }
+
+// /*
+//  * Extract a packet from the head of sub-queue 'q'
+//  * Return a packet or NULL if the queue is empty.
+//  * If getts is set, also extract packet's timestamp from mtag.
+//  */
+// __inline static struct mbuf *
+// fq_pie_extract_head(struct fq_pie_flow *q, aqm_time_t *pkt_ts,
+// 	struct fq_pie_si *si, int getts)
+// {
+// 	struct mbuf *m;
+
+// next:	m = q->mq.head;
+// 	if (m == NULL)
+// 		return m;
+// 	q->mq.head = m->m_nextpkt;
+
+// 	fq_update_stats(q, si, -m->m_pkthdr.len, 0);
+
+// 	if (si->main_q.ni.length == 0) /* queue is now idle */
+// 			si->main_q.q_time = V_dn_cfg.curr_time;
+
+// 	if (getts) {
+// 		/* extract packet timestamp*/
+// 		struct m_tag *mtag;
+// 		mtag = m_tag_locate(m, MTAG_ABI_COMPAT, DN_AQM_MTAG_TS, NULL);
+// 		if (mtag == NULL){
+// 			D("PIE timestamp mtag not found!");
+// 			*pkt_ts = 0;
+// 		} else {
+// 			*pkt_ts = *(aqm_time_t *)(mtag + 1);
+// 			m_tag_delete(m,mtag); 
+// 		}
+// 	}
+// 	if (m->m_pkthdr.rcvif != NULL &&
+// 	    __predict_false(m_rcvif_restore(m) == NULL)) {
+// 		m_freem(m);
+// 		goto next;
+// 	}
+// 	return m;
+// }
 
 /*
  * Callout function for drop probability calculation 
