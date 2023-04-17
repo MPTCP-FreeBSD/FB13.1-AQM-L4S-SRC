@@ -154,7 +154,7 @@ struct dn_sch_fq_pie_parms
  fq_pie_sysctl = {{15000 * AQM_TIME_1US, 15000 * AQM_TIME_1US,
 	150000 * AQM_TIME_1US, PIE_SCALE * 0.1, PIE_SCALE * 0.125, 
 	PIE_SCALE * 1.25,	PIE_CAPDROP_ENABLED | PIE_DERAND_ENABLED},
-	1024, 10240, 1514};
+	6, 10240, 1514};
 
 static int
 fqpie_sysctl_alpha_beta_handler(SYSCTL_HANDLER_ARGS)
@@ -341,12 +341,12 @@ fq_pie_extract_head(struct fq_pie_flow *q, aqm_time_t *pkt_ts,
 	struct fq_pie_si *si, int getts)
 {
 	struct mbuf *m = q->mq.head;
-	printf("fq_pie_extract_head:Start fq_pie_extract_head \n");
+	//printf("fq_pie_extract_head:Start fq_pie_extract_head \n");
 
 	if (m == NULL)
 		return m;
 	q->mq.head = m->m_nextpkt;
-	printf("fq_pie_extract_head:Packet is not null \n");
+	//printf("fq_pie_extract_head:Packet is not null \n");
 
 	fq_update_stats(q, si, -m->m_pkthdr.len, 0);
 
@@ -365,7 +365,7 @@ fq_pie_extract_head(struct fq_pie_flow *q, aqm_time_t *pkt_ts,
 			m_tag_delete(m,mtag); 
 		}
 	}
-	printf("fq_pie_extract_head:Start fq_pie_extract_head ENDED\n");
+	//printf("fq_pie_extract_head:Start fq_pie_extract_head ENDED\n");
 	return m;
 }
 
@@ -1077,7 +1077,7 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 		return ENOMEM ; 
 	}
 	/* allocate memory for flows array */
-	printf("flows_cnt : %d",schk->cfg.flows_cnt);
+	printf("flows_cnt : %d \n",schk->cfg.flows_cnt);
 	si->si_extra->flows = mallocarray(schk->cfg.flows_cnt,
 	    sizeof(struct fq_pie_flow), M_DUMMYNET, M_NOWAIT | M_ZERO);
 	flows = si->si_extra->flows;
