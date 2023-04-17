@@ -273,7 +273,7 @@ SYSCTL_PROC(_net_inet_ip_dummynet_fqpie, OID_AUTO, beta,
 SYSCTL_UINT(_net_inet_ip_dummynet_fqpie, OID_AUTO, quantum,
 	CTLFLAG_RW, &fq_pie_sysctl.quantum, 1514, "quantum for FQ_PIE");
 SYSCTL_UINT(_net_inet_ip_dummynet_fqpie, OID_AUTO, flows,
-	CTLFLAG_RW, &fq_pie_sysctl.flows_cnt, 1024, "Number of queues for FQ_PIE");
+	CTLFLAG_RW, &fq_pie_sysctl.flows_cnt, 6, "Number of queues for FQ_PIE");
 SYSCTL_UINT(_net_inet_ip_dummynet_fqpie, OID_AUTO, limit,
 	CTLFLAG_RW, &fq_pie_sysctl.limit, 10240, "limit for FQ_PIE");
 #endif
@@ -839,6 +839,7 @@ fq_pie_classify_flow(struct mbuf *m, uint16_t fcount, struct fq_pie_si *si)
 	struct ip6_hdr *ip6;
 	int isip6;
 	isip6 = (ip->ip_v == 6);
+	
 
 	if(isip6) {
 		ip6 = (struct ip6_hdr *)ip;
@@ -1076,6 +1077,7 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 		return ENOMEM ; 
 	}
 	/* allocate memory for flows array */
+	printf("flows_cnt : %d",schk->cfg.flows_cnt);
 	si->si_extra->flows = mallocarray(schk->cfg.flows_cnt,
 	    sizeof(struct fq_pie_flow), M_DUMMYNET, M_NOWAIT | M_ZERO);
 	flows = si->si_extra->flows;
@@ -1189,7 +1191,7 @@ fq_pie_config(struct dn_schk *_schk)
 			fqp_cfg->limit = fq_pie_sysctl.limit;
 		else
 			fqp_cfg->limit = ep->par[8];
-		if (ep->par[9] < 0)
+		if (1)
 			fqp_cfg->flows_cnt = fq_pie_sysctl.flows_cnt;
 		else
 			fqp_cfg->flows_cnt = ep->par[9];
