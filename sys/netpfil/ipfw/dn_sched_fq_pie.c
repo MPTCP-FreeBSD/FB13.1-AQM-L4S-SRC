@@ -739,6 +739,11 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 	pprms = pst->parms;
 	t = ENQUE;
 
+	if(ecn_mark(m))
+	{
+		printf("ECN Packet marked %d \n",ecn_mark(m));
+	}
+
 	/* drop/mark the packet when PIE is active and burst time elapsed */
 	if (pst->sflags & PIE_ACTIVE && pst->burst_allowance == 0
 		&& drop_early(pst, q->stats.len_bytes) == DROP) {
@@ -746,10 +751,7 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 			 * if drop_prob over ECN threshold, drop the packet 
 			 * otherwise mark and enqueue it.
 			 */
-			if(ecn_mark(m))
-			{
-				printf("ECN Packet marked %d \n",ecn_mark(m));
-			}
+			
 			if (pprms->flags & PIE_ECN_ENABLED && pst->drop_prob < 
 				(pprms->max_ecnth << (PIE_PROB_BITS - PIE_FIX_POINT_BITS))
 				&& ecn_mark(m))
