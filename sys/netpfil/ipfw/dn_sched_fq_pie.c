@@ -739,8 +739,7 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 	pprms = pst->parms;
 	t = ENQUE;
 
-	printf("ECN Packet marked ? %d \n",ecn_mark(m));
-
+	
 
 	/* drop/mark the packet when PIE is active and burst time elapsed */
 	if (pst->sflags & PIE_ACTIVE && pst->burst_allowance == 0
@@ -919,6 +918,20 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	flows = si->si_extra->flows;
 	schk = (struct fq_pie_schk *)(si->_si.sched+1);
 	param = &schk->cfg;
+
+	printf("ECN Packet marked ? %d \n",ecn_mark(m));	
+	if(ecn_mark(m))
+    {
+        idx=idx+3;
+		printf("ECN Packet flow index : %d \n",idx);
+    }
+	else{
+		printf("NON-ECN Packet flow index : %d \n",idx);
+	}
+
+	
+	
+	
 
 	 /* classify a packet to queue number*/
 	idx = fq_pie_classify_flow(m, param->flows_cnt, si);
