@@ -534,7 +534,7 @@ fq_calculate_drop_prob(void *x)
 	pst->drop_prob = prob;
 
 	printf("FLow Index: %d",q->flow_index);
-	printf("|||||Drop Prob: %d \n",prob);
+	printf("|||||Drop Prob: %ld \n",(long)prob);
 
 	/* store current delay value */
 	pst->qdelay_old = pst->current_qdelay;
