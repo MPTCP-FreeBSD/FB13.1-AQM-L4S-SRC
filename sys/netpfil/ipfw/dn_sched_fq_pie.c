@@ -85,23 +85,6 @@
 /* list of queues */
 STAILQ_HEAD(fq_pie_list, fq_pie_flow);
 
-
-
-uint32_t calc_drop_prob_flow_0;
-uint32_t calc_drop_prob_flow_1;
-uint32_t calc_drop_prob_flow_2;
-uint32_t calc_drop_prob_flow_3;
-uint32_t calc_drop_prob_flow_4;
-uint32_t calc_drop_prob_flow_5;
-
-
-uint32_t drop_prob_flow_0;
-uint32_t drop_prob_flow_1;
-uint32_t drop_prob_flow_2;
-uint32_t drop_prob_flow_3;
-uint32_t drop_prob_flow_4;
-uint32_t drop_prob_flow_5;
-
 /* FQ_PIE parameters including PIE */
 struct dn_sch_fq_pie_parms {
 	struct dn_aqm_pie_parms	pcfg;	/* PIE configuration Parameters */
@@ -126,7 +109,6 @@ struct fq_pie_flow {
 	struct flow_stats stats;	/* statistics */
 	int deficit;
 	int active;		/* 1: flow is active (in a list) */
-	int flow_index;
 	struct pie_status pst;	/* pie status variables */
 	struct fq_pie_si_extra *psi_extra;
 	STAILQ_ENTRY(fq_pie_flow) flowchain;
@@ -436,6 +418,7 @@ fq_pie_extract_head(struct fq_pie_flow *q, aqm_time_t *pkt_ts,
 static void
 fq_calculate_drop_prob(void *x)
 {
+	printf("fq_calculate_drop_prob started \n");
 	struct fq_pie_flow *q = (struct fq_pie_flow *) x;
 	struct pie_status *pst = &q->pst;
 	struct dn_aqm_pie_parms *pprms; 
@@ -533,13 +516,10 @@ fq_calculate_drop_prob(void *x)
 
 	pst->drop_prob = prob;
 
-	printf("Flow Index: %d",q->flow_index);
-	printf("|||||Drop Prob: %ld \n",(long)prob);
+	printf("fq_calculate_drop_prob calculated prob \n");
 
 	/* store current delay value */
 	pst->qdelay_old = pst->current_qdelay;
-
-
 
 	/* update burst allowance */
 	if ((pst->sflags & PIE_ACTIVE) && pst->burst_allowance) {
@@ -555,6 +535,7 @@ fq_calculate_drop_prob(void *x)
 		0, fq_calculate_drop_prob, q, 0);
 
 	mtx_unlock(&pst->lock_mtx);
+	printf("fq_calculate_drop_prob ended \n");
 }
 
 /* 
@@ -711,7 +692,6 @@ pie_dequeue(struct fq_pie_flow *q, struct fq_pie_si *si)
 				 */
 				if(pst->avg_dq_time == 0)
 					pst->avg_dq_time = dq_time;
-					
 				else {
 					/*
 					 * weight = PIE_DQ_THRESHOLD/2^6, but we scaled
@@ -954,7 +934,7 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	idx = fq_pie_classify_flow(m, param->flows_cnt/2, si);
 
 	//printf("ECN Packet marked ? %d \n",ecn_mark(m));	
-	if(ecn_mark(m)==1)
+	if(ecn_mark(m))
     {
         idx=idx+3;
 		//printf("ECN Packet flow index : %d \n",idx);
