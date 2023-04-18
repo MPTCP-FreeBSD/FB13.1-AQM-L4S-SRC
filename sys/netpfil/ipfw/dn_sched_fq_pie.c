@@ -85,6 +85,23 @@
 /* list of queues */
 STAILQ_HEAD(fq_pie_list, fq_pie_flow);
 
+
+
+uint32_t calc_drop_prob_flow_0;
+uint32_t calc_drop_prob_flow_1;
+uint32_t calc_drop_prob_flow_2;
+uint32_t calc_drop_prob_flow_3;
+uint32_t calc_drop_prob_flow_4;
+uint32_t calc_drop_prob_flow_5;
+
+
+uint32_t drop_prob_flow_0;
+uint32_t drop_prob_flow_1;
+uint32_t drop_prob_flow_2;
+uint32_t drop_prob_flow_3;
+uint32_t drop_prob_flow_4;
+uint32_t drop_prob_flow_5;
+
 /* FQ_PIE parameters including PIE */
 struct dn_sch_fq_pie_parms {
 	struct dn_aqm_pie_parms	pcfg;	/* PIE configuration Parameters */
@@ -109,6 +126,7 @@ struct fq_pie_flow {
 	struct flow_stats stats;	/* statistics */
 	int deficit;
 	int active;		/* 1: flow is active (in a list) */
+	int flow_index;
 	struct pie_status pst;	/* pie status variables */
 	struct fq_pie_si_extra *psi_extra;
 	STAILQ_ENTRY(fq_pie_flow) flowchain;
@@ -515,8 +533,13 @@ fq_calculate_drop_prob(void *x)
 
 	pst->drop_prob = prob;
 
+	printf("FLow Index: %d",q->flow_index);
+	printf("|||||Drop Prob: %d \n",prob);
+
 	/* store current delay value */
 	pst->qdelay_old = pst->current_qdelay;
+
+
 
 	/* update burst allowance */
 	if ((pst->sflags & PIE_ACTIVE) && pst->burst_allowance) {
@@ -688,6 +711,7 @@ pie_dequeue(struct fq_pie_flow *q, struct fq_pie_si *si)
 				 */
 				if(pst->avg_dq_time == 0)
 					pst->avg_dq_time = dq_time;
+					
 				else {
 					/*
 					 * weight = PIE_DQ_THRESHOLD/2^6, but we scaled
