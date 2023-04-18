@@ -913,7 +913,6 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	struct fq_pie_flow *flows;
 	int idx, drop, i, maxidx;
 
-	idx=0
 
 	mainq = (struct dn_queue *)(_si + 1);
 	si = (struct fq_pie_si *)_si;
