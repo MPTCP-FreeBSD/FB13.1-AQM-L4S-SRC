@@ -739,7 +739,6 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 	pprms = pst->parms;
 	t = ENQUE;
 
-	printf("Trying to chceck if Packet is ECN-marked");
 	printf("ECN Packet marked ? %d \n",ecn_mark(m));
 
 
