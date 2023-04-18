@@ -913,11 +913,22 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	struct fq_pie_flow *flows;
 	int idx, drop, i, maxidx;
 
+	idx=0
+
 	mainq = (struct dn_queue *)(_si + 1);
 	si = (struct fq_pie_si *)_si;
 	flows = si->si_extra->flows;
 	schk = (struct fq_pie_schk *)(si->_si.sched+1);
 	param = &schk->cfg;
+
+	
+
+	
+	
+	
+
+	 /* classify a packet to queue number*/
+	idx = fq_pie_classify_flow(m, param->flows_cnt, si);
 
 	printf("ECN Packet marked ? %d \n",ecn_mark(m));	
 	if(ecn_mark(m))
@@ -928,13 +939,6 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	else{
 		printf("NON-ECN Packet flow index : %d \n",idx);
 	}
-
-	
-	
-	
-
-	 /* classify a packet to queue number*/
-	idx = fq_pie_classify_flow(m, param->flows_cnt, si);
 
 	/* enqueue packet into appropriate queue using PIE AQM.
 	 * Note: 'pie_enqueue' function returns 1 only when it unable to 
