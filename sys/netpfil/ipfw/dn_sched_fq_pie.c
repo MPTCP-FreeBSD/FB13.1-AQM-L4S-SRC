@@ -929,8 +929,8 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	 /* classify a packet to queue number*/
 	idx = fq_pie_classify_flow(m, param->flows_cnt/2, si);
 
-	//printf("ECN Packet marked ? %d \n",ecn_mark(m));	
-	if(ecn_mark(m))
+	printf("ECN Packet marked ? %d \n",ecn_mark(m));	
+	if(ecn_mark(m)==1)
     {
         idx=idx+3;
 		printf("ECN Packet flow index : %d \n",idx);
