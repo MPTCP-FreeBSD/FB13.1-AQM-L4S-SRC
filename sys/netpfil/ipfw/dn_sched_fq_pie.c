@@ -749,8 +749,7 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 			 * otherwise mark and enqueue it.
 			 */
 			if (pprms->flags & PIE_ECN_ENABLED && pst->drop_prob < 
-				(pprms->max_ecnth << (PIE_PROB_BITS - PIE_FIX_POINT_BITS))
-				&& ecn_mark(m))
+				(pprms->max_ecnth << (PIE_PROB_BITS - PIE_FIX_POINT_BITS)))
 				t = ENQUE;
 			else
 				t = DROP;
