@@ -910,6 +910,7 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	struct dn_queue *mainq;
 	struct fq_pie_flow *flows;
 	int idx, drop, i, maxidx;
+	uint16_t ecn_flag_c=0;
 
 	mainq = (struct dn_queue *)(_si + 1);
 	si = (struct fq_pie_si *)_si;
@@ -939,15 +940,9 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	
 
 	if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_NOTECT)
-	{
-		printf(" not-ECT \n");	/* not-ECT */
-	}
-		
+		ecn_flag_c=0;	/* not-ECT */
 	if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_CE)
-	{
-		printf("already marked \n");	/* already marked */
-	}
-		
+		ecn_flag_c=1;	/* already marked */
 
 	// /*
 	// 	* ecn-capable but not marked,
