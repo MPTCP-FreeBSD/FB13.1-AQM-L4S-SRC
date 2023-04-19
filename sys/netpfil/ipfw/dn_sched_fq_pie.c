@@ -910,6 +910,7 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	struct dn_queue *mainq;
 	struct fq_pie_flow *flows;
 	int idx, drop, i, maxidx;
+	int ecn=0;
 
 	mainq = (struct dn_queue *)(_si + 1);
 	si = (struct fq_pie_si *)_si;
@@ -923,14 +924,7 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	//printf("Is Packet ECN-Marked,%d \n",ecn_mark(m));	
 	printf("classify done \n");
 
-	
-
-    /* Check if ECN is set in the IP header */
-    // if (ip_header->ip_tos & IPTOS_ECN_MASK) {
-    //     printf("ECN \n");
-    // } else {
-    //     printf("Non-ECN \n");
-    // }
+    
 
 
 
@@ -939,34 +933,38 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	uint16_t old;
 
 	if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_NOTECT)
-		printf(" not-ECT \n");	/* not-ECT */
-	if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_CE)
-		printf("already marked \n");	/* already marked */
+	{
+		//printf(" not-ECT \n");	/* not-ECT */
+	}
+	else if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_CE)
+	{
+		//printf("already marked \n");	/* already marked */
+		idx=idx+3;
+		ecn=1;
+	}
 
-	/*
+	else
+	{
+		/*
 		* ecn-capable but not marked,
 		* mark CE and update checksum
 		*/
-	old = *(uint16_t *)ip;
-	ip->ip_tos |= IPTOS_ECN_CE;
-	ip->ip_sum = cksum_adjust(ip->ip_sum, old, *(uint16_t *)ip);
-	printf("ecn-capable but not marked mark CE and update checksum \n");
-
-
-
-
-
-
-
-	// if(ecn_mark(m))
-	// {
-	// 	idx=idx+3;
-	// 	//printf("ECN \n");
-	// }
-	// else
-	// {
-	// 	//printf("NON-ECN \n");
-	// }
+		old = *(uint16_t *)ip;
+		ip->ip_tos |= IPTOS_ECN_CE;
+		ip->ip_sum = cksum_adjust(ip->ip_sum, old, *(uint16_t *)ip);
+		//printf("ecn-capable but not marked ,mark CE and update checksum \n");
+		idx=idx+3;
+		ecn=1;
+	}
+	if(ecn)
+	{
+		printf("ECN flow index: %d \n",idx);
+	}
+	else
+	{
+		printf("Non-ECN flow index: %d \n",idx);
+	}
+	
 		
 
 	/* enqueue packet into appropriate queue using PIE AQM.
