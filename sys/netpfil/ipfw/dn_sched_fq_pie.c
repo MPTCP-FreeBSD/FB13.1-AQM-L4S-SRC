@@ -919,7 +919,7 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	 /* classify a packet to queue number*/
 	idx = fq_pie_classify_flow(m, param->flows_cnt/2, si);
 
-	printf("Is Packet ECN-Marked,%d \n",ecn_mark(m));	
+	//printf("Is Packet ECN-Marked,%d \n",ecn_mark(m));	
 	// if(ecn_mark(m)==1)
 	// {
 	// 	idx=idx+3;
