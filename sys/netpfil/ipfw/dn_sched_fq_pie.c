@@ -952,6 +952,12 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	// ip->ip_tos |= IPTOS_ECN_CE;
 	// ip->ip_sum = cksum_adjust(ip->ip_sum, old, *(uint16_t *)ip);
 	// printf("ecn-capable but not marked mark CE and update checksum \n");
+
+
+	if(ecn_test_check==1)
+		printf("already marked \n");
+	else
+		printf("Non-ECN \n");
 	
 
 
