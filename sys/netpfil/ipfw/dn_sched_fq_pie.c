@@ -923,8 +923,14 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	//printf("Is Packet ECN-Marked,%d \n",ecn_mark(m));	
 	printf("classify done \n");
 
-	if (param->flags & PIE_ECN_ENABLED && ecn_mark(m))
-		printf("ECN");
+	struct ip *ip_header = (struct ip *)packet;
+
+    /* Check if ECN is set in the IP header */
+    if (ip_header->ip_tos & IPTOS_ECN_MASK) {
+        print("ECN \n");
+    } else {
+        print("Non-ECN \n");
+    }
 	// if(ecn_mark(m))
 	// {
 	// 	idx=idx+3;
