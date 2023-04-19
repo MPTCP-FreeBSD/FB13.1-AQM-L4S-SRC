@@ -154,7 +154,7 @@ struct dn_sch_fq_pie_parms
  fq_pie_sysctl = {{15000 * AQM_TIME_1US, 15000 * AQM_TIME_1US,
 	150000 * AQM_TIME_1US, PIE_SCALE * 0.1, PIE_SCALE * 0.125, 
 	PIE_SCALE * 1.25,	PIE_CAPDROP_ENABLED | PIE_DERAND_ENABLED},
-	1024, 10240, 1514};
+	2, 10240, 1514};
 
 static int
 fqpie_sysctl_alpha_beta_handler(SYSCTL_HANDLER_ARGS)
@@ -1096,6 +1096,8 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 	/* init the old and new flows lists */
 	STAILQ_INIT(&si->newflows);
 	STAILQ_INIT(&si->oldflows);
+
+	printf("flows_cnt: %d \n",schk->cfg.flows_cnt);
 
 	/* init the flows (sub-queues) */
 	for (i = 0; i < schk->cfg.flows_cnt; i++) {
