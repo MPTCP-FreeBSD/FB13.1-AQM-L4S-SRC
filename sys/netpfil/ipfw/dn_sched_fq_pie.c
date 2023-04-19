@@ -273,7 +273,7 @@ SYSCTL_PROC(_net_inet_ip_dummynet_fqpie, OID_AUTO, beta,
 SYSCTL_UINT(_net_inet_ip_dummynet_fqpie, OID_AUTO, quantum,
 	CTLFLAG_RW, &fq_pie_sysctl.quantum, 1514, "quantum for FQ_PIE");
 SYSCTL_UINT(_net_inet_ip_dummynet_fqpie, OID_AUTO, flows,
-	CTLFLAG_RW, &fq_pie_sysctl.flows_cnt, 1024, "Number of queues for FQ_PIE");
+	CTLFLAG_RW, &fq_pie_sysctl.flows_cnt, 2, "Number of queues for FQ_PIE");
 SYSCTL_UINT(_net_inet_ip_dummynet_fqpie, OID_AUTO, limit,
 	CTLFLAG_RW, &fq_pie_sysctl.limit, 10240, "limit for FQ_PIE");
 #endif
@@ -1194,7 +1194,7 @@ fq_pie_config(struct dn_schk *_schk)
 			fqp_cfg->limit = fq_pie_sysctl.limit;
 		else
 			fqp_cfg->limit = ep->par[8];
-		if (ep->par[9] < 0)
+		if (1)
 			fqp_cfg->flows_cnt = fq_pie_sysctl.flows_cnt;
 		else
 			fqp_cfg->flows_cnt = ep->par[9];
