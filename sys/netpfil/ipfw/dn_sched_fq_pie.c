@@ -910,7 +910,7 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	struct dn_queue *mainq;
 	struct fq_pie_flow *flows;
 	int idx, drop, i, maxidx;
-	int ecn=0;
+
 
 	mainq = (struct dn_queue *)(_si + 1);
 	si = (struct fq_pie_si *)_si;
@@ -940,7 +940,7 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	{
 		printf("already marked \n");	/* already marked */
 		//idx=idx+3;
-		ecn=1;
+		
 	}
 
 	else
@@ -954,16 +954,9 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 		ip->ip_sum = cksum_adjust(ip->ip_sum, old, *(uint16_t *)ip);
 		printf("ecn-capable but not marked ,mark CE and update checksum \n");
 		//idx=idx+3;
-		ecn=1;
+	
 	}
-	if(ecn)
-	{
-		printf("ECN flow index: %d \n",idx);
-	}
-	else
-	{
-		printf("Non-ECN flow index: %d \n",idx);
-	}
+	
 	
 		
 
