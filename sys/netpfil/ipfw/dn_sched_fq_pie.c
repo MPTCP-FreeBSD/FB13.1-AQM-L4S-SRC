@@ -471,6 +471,7 @@ fq_calculate_drop_prob(void *x)
 		p >>= PIE_FIX_POINT_BITS + 12;
 
 	oldprob = prob;
+	printf("oldprob: %ld \n",(long)oldprob);
 
 	if (p_isneg) {
 		prob = prob - p;
@@ -479,6 +480,7 @@ fq_calculate_drop_prob(void *x)
 		if (prob > oldprob) {
 			prob= 0;
 			D("underflow");
+			printf("underflow \n");
 		}
 	} else {
 		/* Cap Drop adjustment */
