@@ -748,11 +748,7 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 			 * if drop_prob over ECN threshold, drop the packet 
 			 * otherwise mark and enqueue it.
 			 */
-			if (pprms->flags & PIE_ECN_ENABLED && pst->drop_prob < 
-				(pprms->max_ecnth << (PIE_PROB_BITS - PIE_FIX_POINT_BITS)))
-				t = ENQUE;
-			else
-				t = DROP;
+			t = DROP;
 		}
 
 	/* Turn PIE on when 1/3 of the queue is full */ 
@@ -920,15 +916,15 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	idx = fq_pie_classify_flow(m, param->flows_cnt/2, si);
 
 	//printf("Is Packet ECN-Marked,%d \n",ecn_mark(m));	
-	// if(ecn_mark(m)==1)
-	// {
-	// 	idx=idx+3;
-	// 	printf("ECN idx: %d \n",idx);
-	// }
-	// else
-	// {
-	// 	printf("NON-ECN idx: %d \n",idx);
-	// }
+	if(ecn_mark(m))
+	{
+		//idx=idx+3;
+		printf("ECN \n");
+	}
+	else
+	{
+		printf("NON-ECN \n");
+	}
 		
 
 	/* enqueue packet into appropriate queue using PIE AQM.
