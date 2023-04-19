@@ -471,7 +471,7 @@ fq_calculate_drop_prob(void *x)
 		p >>= PIE_FIX_POINT_BITS + 12;
 
 	oldprob = prob;
-	printf("oldprob: %ld \n",(long)oldprob);
+	
 
 	if (p_isneg) {
 		prob = prob - p;
@@ -518,8 +518,7 @@ fq_calculate_drop_prob(void *x)
 
 	pst->drop_prob = prob;
 
-	printf("fq_calculate_drop_prob calculated prob \n");
-	printf("drop_prob: %d \n",pst->drop_prob);
+	
 
 	/* store current delay value */
 	pst->qdelay_old = pst->current_qdelay;
