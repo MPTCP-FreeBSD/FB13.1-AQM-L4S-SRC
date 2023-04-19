@@ -934,12 +934,12 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 
 	if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_NOTECT)
 	{
-		//printf(" not-ECT \n");	/* not-ECT */
+		printf(" not-ECT \n");	/* not-ECT */
 	}
 	else if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_CE)
 	{
-		//printf("already marked \n");	/* already marked */
-		idx=idx+3;
+		printf("already marked \n");	/* already marked */
+		//idx=idx+3;
 		ecn=1;
 	}
 
@@ -952,8 +952,8 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 		old = *(uint16_t *)ip;
 		ip->ip_tos |= IPTOS_ECN_CE;
 		ip->ip_sum = cksum_adjust(ip->ip_sum, old, *(uint16_t *)ip);
-		//printf("ecn-capable but not marked ,mark CE and update checksum \n");
-		idx=idx+3;
+		printf("ecn-capable but not marked ,mark CE and update checksum \n");
+		//idx=idx+3;
 		ecn=1;
 	}
 	if(ecn)
