@@ -921,15 +921,15 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	idx = fq_pie_classify_flow(m, param->flows_cnt/2, si);
 
 	printf("Is Packet ECN-Marked,%d \n",ecn_mark(m));	
-	if(ecn_mark(m)==1)
-	{
-		idx=idx+3;
-		printf("ECN idx: %d \n",idx);
-	}
-	else
-	{
-		printf("NON-ECN idx: %d \n",idx);
-	}
+	// if(ecn_mark(m)==1)
+	// {
+	// 	idx=idx+3;
+	// 	printf("ECN idx: %d \n",idx);
+	// }
+	// else
+	// {
+	// 	printf("NON-ECN idx: %d \n",idx);
+	// }
 		
 
 	/* enqueue packet into appropriate queue using PIE AQM.
