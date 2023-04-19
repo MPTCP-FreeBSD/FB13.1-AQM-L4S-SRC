@@ -938,9 +938,7 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	ip = (struct ip *)mtodo(m, dn_tag_get(m)->iphdr_off);
 	
 
-	if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_NOTECT)
-		printf(" not-ECT \n");	/* not-ECT */
-	if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_CE)
+	if ((ip->ip_tos & IPTOS_ECN_MASK) !=0)
 		printf("already marked \n");	/* already marked */
 
 	// /*
