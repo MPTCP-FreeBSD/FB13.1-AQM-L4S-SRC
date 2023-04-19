@@ -922,15 +922,15 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 
 	//printf("Is Packet ECN-Marked,%d \n",ecn_mark(m));	
 	printf("classify done \n");
-	// if(ecn_mark(m))
-	// {
-	// 	//idx=idx+3;
-	// 	printf("ECN \n");
-	// }
-	// else
-	// {
-	// 	printf("NON-ECN \n");
-	// }
+	if(ecn_mark(m))
+	{
+		idx=idx+3;
+		//printf("ECN \n");
+	}
+	else
+	{
+		//printf("NON-ECN \n");
+	}
 		
 
 	/* enqueue packet into appropriate queue using PIE AQM.
