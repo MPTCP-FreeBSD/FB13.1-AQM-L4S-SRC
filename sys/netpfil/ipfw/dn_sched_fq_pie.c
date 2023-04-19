@@ -955,9 +955,17 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 
 
 	if(ecn_test_check==1)
-		printf("already marked \n");
+	{
+		idx=idx+3;
+		printf("already marked , flow index: %d\n", idx);
+		
+	}
+		
 	else
-		printf("Non-ECN \n");
+		printf("Non-ECN, flow index: %d\n", idx);
+
+	
+	
 	
 
 
