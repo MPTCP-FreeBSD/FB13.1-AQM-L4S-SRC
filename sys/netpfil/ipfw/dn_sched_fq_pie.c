@@ -154,7 +154,7 @@ struct dn_sch_fq_pie_parms
  fq_pie_sysctl = {{15000 * AQM_TIME_1US, 15000 * AQM_TIME_1US,
 	150000 * AQM_TIME_1US, PIE_SCALE * 0.1, PIE_SCALE * 0.125, 
 	PIE_SCALE * 1.25,	PIE_CAPDROP_ENABLED | PIE_DERAND_ENABLED},
-	6, 10240, 1514};
+	1024, 10240, 1514};
 
 static int
 fqpie_sysctl_alpha_beta_handler(SYSCTL_HANDLER_ARGS)
@@ -273,7 +273,7 @@ SYSCTL_PROC(_net_inet_ip_dummynet_fqpie, OID_AUTO, beta,
 SYSCTL_UINT(_net_inet_ip_dummynet_fqpie, OID_AUTO, quantum,
 	CTLFLAG_RW, &fq_pie_sysctl.quantum, 1514, "quantum for FQ_PIE");
 SYSCTL_UINT(_net_inet_ip_dummynet_fqpie, OID_AUTO, flows,
-	CTLFLAG_RW, &fq_pie_sysctl.flows_cnt, 6, "Number of queues for FQ_PIE");
+	CTLFLAG_RW, &fq_pie_sysctl.flows_cnt, 1024, "Number of queues for FQ_PIE");
 SYSCTL_UINT(_net_inet_ip_dummynet_fqpie, OID_AUTO, limit,
 	CTLFLAG_RW, &fq_pie_sysctl.limit, 10240, "limit for FQ_PIE");
 #endif
@@ -328,7 +328,6 @@ fq_update_stats(struct fq_pie_flow *q, struct fq_pie_si *si, int len,
 	}
 
 }
-
 
 
 /*
@@ -418,12 +417,12 @@ fq_pie_extract_head(struct fq_pie_flow *q, aqm_time_t *pkt_ts,
 static void
 fq_calculate_drop_prob(void *x)
 {
-	printf("fq_calculate_drop_prob started \n");
 	struct fq_pie_flow *q = (struct fq_pie_flow *) x;
 	struct pie_status *pst = &q->pst;
 	struct dn_aqm_pie_parms *pprms; 
 	int64_t p, prob, oldprob;
 	int p_isneg;
+	printf("fq_calculate_drop_prob \n");
 
 	pprms = pst->parms;
 	prob = pst->drop_prob;
@@ -471,7 +470,6 @@ fq_calculate_drop_prob(void *x)
 		p >>= PIE_FIX_POINT_BITS + 12;
 
 	oldprob = prob;
-	
 
 	if (p_isneg) {
 		prob = prob - p;
@@ -480,7 +478,6 @@ fq_calculate_drop_prob(void *x)
 		if (prob > oldprob) {
 			prob= 0;
 			D("underflow");
-			printf("underflow \n");
 		}
 	} else {
 		/* Cap Drop adjustment */
@@ -518,8 +515,6 @@ fq_calculate_drop_prob(void *x)
 
 	pst->drop_prob = prob;
 
-	
-
 	/* store current delay value */
 	pst->qdelay_old = pst->current_qdelay;
 
@@ -537,7 +532,6 @@ fq_calculate_drop_prob(void *x)
 		0, fq_calculate_drop_prob, q, 0);
 
 	mtx_unlock(&pst->lock_mtx);
-	printf("fq_calculate_drop_prob ended \n");
 }
 
 /* 
@@ -745,8 +739,6 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 	pprms = pst->parms;
 	t = ENQUE;
 
-	
-
 	/* drop/mark the packet when PIE is active and burst time elapsed */
 	if (pst->sflags & PIE_ACTIVE && pst->burst_allowance == 0
 		&& drop_early(pst, q->stats.len_bytes) == DROP) {
@@ -754,7 +746,6 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 			 * if drop_prob over ECN threshold, drop the packet 
 			 * otherwise mark and enqueue it.
 			 */
-			
 			if (pprms->flags & PIE_ECN_ENABLED && pst->drop_prob < 
 				(pprms->max_ecnth << (PIE_PROB_BITS - PIE_FIX_POINT_BITS))
 				&& ecn_mark(m))
@@ -848,7 +839,6 @@ fq_pie_classify_flow(struct mbuf *m, uint16_t fcount, struct fq_pie_si *si)
 	struct ip6_hdr *ip6;
 	int isip6;
 	isip6 = (ip->ip_v == 6);
-	
 
 	if(isip6) {
 		ip6 = (struct ip6_hdr *)ip;
@@ -919,31 +909,15 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	struct fq_pie_flow *flows;
 	int idx, drop, i, maxidx;
 
-
 	mainq = (struct dn_queue *)(_si + 1);
 	si = (struct fq_pie_si *)_si;
 	flows = si->si_extra->flows;
 	schk = (struct fq_pie_schk *)(si->_si.sched+1);
 	param = &schk->cfg;
 
-	
-
-	
-	
-	
-
 	 /* classify a packet to queue number*/
-	idx = fq_pie_classify_flow(m, param->flows_cnt/2, si);
-
-	//printf("ECN Packet marked ? %d \n",ecn_mark(m));	
-	if(ecn_mark(m))
-    {
-        idx=idx+3;
-		//printf("ECN Packet flow index : %d \n",idx);
-    }
-	else{
-		//printf("NON-ECN Packet flow index : %d \n",idx);
-	}
+	idx = fq_pie_classify_flow(m, param->flows_cnt, si);
+	printf("idx: %d \n",idx);
 
 	/* enqueue packet into appropriate queue using PIE AQM.
 	 * Note: 'pie_enqueue' function returns 1 only when it unable to 
@@ -1075,6 +1049,8 @@ fq_pie_dequeue(struct dn_sch_inst *_si)
 static int
 fq_pie_new_sched(struct dn_sch_inst *_si)
 {
+
+	printf("fq_pie_new_sched \n");
 	struct fq_pie_si *si;
 	struct dn_queue *q;
 	struct fq_pie_schk *schk;
@@ -1103,7 +1079,6 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 		return ENOMEM ; 
 	}
 	/* allocate memory for flows array */
-	printf("flows_cnt : %d \n",schk->cfg.flows_cnt);
 	si->si_extra->flows = mallocarray(schk->cfg.flows_cnt,
 	    sizeof(struct fq_pie_flow), M_DUMMYNET, M_NOWAIT | M_ZERO);
 	flows = si->si_extra->flows;
@@ -1217,7 +1192,7 @@ fq_pie_config(struct dn_schk *_schk)
 			fqp_cfg->limit = fq_pie_sysctl.limit;
 		else
 			fqp_cfg->limit = ep->par[8];
-		if (1)
+		if (ep->par[9] < 0)
 			fqp_cfg->flows_cnt = fq_pie_sysctl.flows_cnt;
 		else
 			fqp_cfg->flows_cnt = ep->par[9];
