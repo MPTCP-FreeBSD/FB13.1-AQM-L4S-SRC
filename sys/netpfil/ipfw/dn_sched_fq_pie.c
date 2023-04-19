@@ -896,7 +896,7 @@ fq_pie_classify_flow(struct mbuf *m, uint16_t fcount, struct fq_pie_si *si)
 	return hash;
 }
 
-static int check_ecn_c(struct mbuf* m)
+static void check_ecn_c(struct mbuf* m)
 {
 	struct ip *ip;
 	ip = (struct ip *)mtodo(m, dn_tag_get(m)->iphdr_off);
@@ -906,6 +906,7 @@ static int check_ecn_c(struct mbuf* m)
 		printf(" not-ECT \n");	/* not-ECT */
 	if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_CE)
 		printf("already marked \n");	/* already marked */
+	
 }
 
 /*
