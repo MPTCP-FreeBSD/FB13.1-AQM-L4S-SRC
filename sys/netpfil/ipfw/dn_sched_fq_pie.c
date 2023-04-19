@@ -939,9 +939,15 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	
 
 	if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_NOTECT)
+	{
 		printf(" not-ECT \n");	/* not-ECT */
+	}
+		
 	if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_CE)
+	{
 		printf("already marked \n");	/* already marked */
+	}
+		
 
 	// /*
 	// 	* ecn-capable but not marked,
