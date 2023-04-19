@@ -918,8 +918,18 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	param = &schk->cfg;
 
 	 /* classify a packet to queue number*/
-	idx = fq_pie_classify_flow(m, param->flows_cnt, si);
-	printf("idx: %d \n",idx);
+	idx = fq_pie_classify_flow(m, param->flows_cnt/2, si);
+	
+	if(ecn_mark(m))
+	{
+		idx=idx+3
+		printf("ECN idx: %d \n",idx);
+	}
+	else
+	{
+		printf("NON-ECN idx: %d \n",idx);
+	}
+		
 
 	/* enqueue packet into appropriate queue using PIE AQM.
 	 * Note: 'pie_enqueue' function returns 1 only when it unable to 
