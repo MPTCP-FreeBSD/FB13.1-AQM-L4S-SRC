@@ -936,21 +936,21 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 
     struct ip *ip;
 	ip = (struct ip *)mtodo(m, dn_tag_get(m)->iphdr_off);
-	uint16_t old;
+	//uint16_t old;
 
 	if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_NOTECT)
 		printf(" not-ECT \n");	/* not-ECT */
 	if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_CE)
 		printf("already marked \n");	/* already marked */
 
-	/*
-		* ecn-capable but not marked,
-		* mark CE and update checksum
-		*/
-	old = *(uint16_t *)ip;
-	ip->ip_tos |= IPTOS_ECN_CE;
-	ip->ip_sum = cksum_adjust(ip->ip_sum, old, *(uint16_t *)ip);
-	printf("ecn-capable but not marked mark CE and update checksum \n");
+	// /*
+	// 	* ecn-capable but not marked,
+	// 	* mark CE and update checksum
+	// 	*/
+	// old = *(uint16_t *)ip;
+	// ip->ip_tos |= IPTOS_ECN_CE;
+	// ip->ip_sum = cksum_adjust(ip->ip_sum, old, *(uint16_t *)ip);
+	// printf("ecn-capable but not marked mark CE and update checksum \n");
 	
 
 
