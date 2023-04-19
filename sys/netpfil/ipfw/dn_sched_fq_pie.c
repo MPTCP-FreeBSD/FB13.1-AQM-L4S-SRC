@@ -896,6 +896,18 @@ fq_pie_classify_flow(struct mbuf *m, uint16_t fcount, struct fq_pie_si *si)
 	return hash;
 }
 
+static int check_ecn_c(struct mbuf* m)
+{
+	struct ip *ip;
+	ip = (struct ip *)mtodo(m, dn_tag_get(m)->iphdr_off);
+	
+
+	if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_NOTECT)
+		printf(" not-ECT \n");	/* not-ECT */
+	if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_CE)
+		printf("already marked \n");	/* already marked */
+}
+
 /*
  * Enqueue a packet into an appropriate queue according to
  * FQ-CoDe; algorithm.
@@ -935,14 +947,7 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 
 
 
-	struct ip *ip;
-	ip = (struct ip *)mtodo(m, dn_tag_get(m)->iphdr_off);
 	
-
-	if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_NOTECT)
-		printf(" not-ECT \n");	/* not-ECT */
-	if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_CE)
-		printf("already marked \n");	/* already marked */
 
 	// /*
 	// 	* ecn-capable but not marked,
@@ -952,6 +957,9 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	// ip->ip_tos |= IPTOS_ECN_CE;
 	// ip->ip_sum = cksum_adjust(ip->ip_sum, old, *(uint16_t *)ip);
 	// printf("ecn-capable but not marked mark CE and update checksum \n");
+
+
+	check_ecn_c(m);
 	
 
 
