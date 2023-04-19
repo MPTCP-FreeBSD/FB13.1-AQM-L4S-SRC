@@ -944,6 +944,9 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_CE)
 		ecn_flag_c=1;	/* already marked */
 
+	
+	
+
 	// /*
 	// 	* ecn-capable but not marked,
 	// 	* mark CE and update checksum
@@ -975,6 +978,8 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	 * Note: 'pie_enqueue' function returns 1 only when it unable to 
 	 * add timestamp to packet (no limit check)*/
 	drop = pie_enqueue(&flows[idx], m, si);
+
+	printf("ECN Flag: %d \n",ecn_flag_c);
 
 	/* pie unable to timestamp a packet */ 
 	if (drop)
