@@ -515,6 +515,8 @@ fq_calculate_drop_prob(void *x)
 
 	pst->drop_prob = prob;
 
+	printf("drop_prob: %d \n",pst->drop_prob);
+
 	/* store current delay value */
 	pst->qdelay_old = pst->current_qdelay;
 
