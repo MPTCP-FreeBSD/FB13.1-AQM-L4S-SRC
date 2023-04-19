@@ -154,7 +154,7 @@ struct dn_sch_fq_pie_parms
  fq_pie_sysctl = {{15000 * AQM_TIME_1US, 15000 * AQM_TIME_1US,
 	150000 * AQM_TIME_1US, PIE_SCALE * 0.1, PIE_SCALE * 0.125, 
 	PIE_SCALE * 1.25,	PIE_CAPDROP_ENABLED | PIE_DERAND_ENABLED},
-	2, 10240, 1514};
+	6, 10240, 1514};
 
 static int
 fqpie_sysctl_alpha_beta_handler(SYSCTL_HANDLER_ARGS)
@@ -273,7 +273,7 @@ SYSCTL_PROC(_net_inet_ip_dummynet_fqpie, OID_AUTO, beta,
 SYSCTL_UINT(_net_inet_ip_dummynet_fqpie, OID_AUTO, quantum,
 	CTLFLAG_RW, &fq_pie_sysctl.quantum, 1514, "quantum for FQ_PIE");
 SYSCTL_UINT(_net_inet_ip_dummynet_fqpie, OID_AUTO, flows,
-	CTLFLAG_RW, &fq_pie_sysctl.flows_cnt, 2, "Number of queues for FQ_PIE");
+	CTLFLAG_RW, &fq_pie_sysctl.flows_cnt, 6, "Number of queues for FQ_PIE");
 SYSCTL_UINT(_net_inet_ip_dummynet_fqpie, OID_AUTO, limit,
 	CTLFLAG_RW, &fq_pie_sysctl.limit, 10240, "limit for FQ_PIE");
 #endif
