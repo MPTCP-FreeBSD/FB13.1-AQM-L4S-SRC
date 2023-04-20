@@ -85,6 +85,14 @@
 /* list of queues */
 STAILQ_HEAD(fq_pie_list, fq_pie_flow);
 
+
+uint32_t drop_prob_Pc_flow_0;
+uint32_t drop_prob_Pc_flow_1;
+uint32_t drop_prob_Pc_flow_2;
+uint32_t drop_prob_Pl_flow_3;
+uint32_t drop_prob_Pl_flow_4;
+uint32_t drop_prob_Pl_flow_5;
+
 /* FQ_PIE parameters including PIE */
 struct dn_sch_fq_pie_parms {
 	struct dn_aqm_pie_parms	pcfg;	/* PIE configuration Parameters */
@@ -108,6 +116,7 @@ struct fq_pie_flow {
 	struct mq	mq;	/* list of packets */
 	struct flow_stats stats;	/* statistics */
 	int deficit;
+	int flow_index;
 	int active;		/* 1: flow is active (in a list) */
 	struct pie_status pst;	/* pie status variables */
 	struct fq_pie_si_extra *psi_extra;
@@ -1169,6 +1178,7 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 	for (i = 0; i < schk->cfg.flows_cnt; i++) {
 		flows[i].pst.parms = &schk->cfg.pcfg;
 		flows[i].psi_extra = si->si_extra;
+		flows[i].flow_index=i;
 		pie_init(&flows[i], schk);
 	}
 
