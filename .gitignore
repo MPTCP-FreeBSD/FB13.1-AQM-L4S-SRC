@@ -28,3 +28,4 @@ tags
 .cache
 .clangd
 .ccls-cache
+.vscode/c_cpp_properties.json
