@@ -527,17 +527,17 @@ fq_calculate_drop_prob(void *x)
 	pst->drop_prob = prob;
 
 	printf("drop_prob: %d \n",pst->drop_prob);
-	if(q->flow_index==0):
+	if(q->flow_index==0)
 		drop_prob_Pc_flow_0=pst->drop_prob;
-	if(q->flow_index==1):
+	if(q->flow_index==1)
 		drop_prob_Pc_flow_1=pst->drop_prob;
-	if(q->flow_index==2):
+	if(q->flow_index==2)
 		drop_prob_Pc_flow_2=pst->drop_prob;
-	if(q->flow_index==3):
+	if(q->flow_index==3)
 		drop_prob_Pl_flow_3=pst->drop_prob;
-	if(q->flow_index==4):
+	if(q->flow_index==4)
 		drop_prob_Pl_flow_4=pst->drop_prob;
-	if(q->flow_index==5):
+	if(q->flow_index==5)
 		drop_prob_Pl_flow_5=pst->drop_prob;
 
 	/* store current delay value */
@@ -769,10 +769,10 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 	uint32_t drop_prob_PCl_flow_4;
 	uint32_t drop_prob_PCl_flow_5;
 
-	if(q->flow_index==0 || q->flow_index==1 || q->flow_index==2 ):
+	if(q->flow_index==0 || q->flow_index==1 || q->flow_index==2 )
 		prob=(pst->drop_prob*pst->drop_prob)/PIE_MAX_PROB;
 
-	if(q->flow_index==3):
+	if(q->flow_index==3)
 	{
 		drop_prob_PCl_flow_3=drop_prob_Pc_flow_0*coupling_factor;
 		if(drop_prob_Pl_flow_3<drop_prob_PCl_flow_3)
@@ -781,7 +781,7 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 			prob=drop_prob_Pl_flow_3;
 	}
 		
-	if(q->flow_index==4):
+	if(q->flow_index==4)
 	{
 		drop_prob_PCl_flow_4=drop_prob_Pc_flow_1*coupling_factor;
 		if(drop_prob_Pl_flow_4<drop_prob_PCl_flow_4)
@@ -789,7 +789,7 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 		else
 			prob=drop_prob_Pl_flow_4;
 	}
-	if(q->flow_index==5):
+	if(q->flow_index==5)
 	{
 		drop_prob_PCl_flow_5=drop_prob_Pc_flow_2*coupling_factor;
 		if(drop_prob_Pl_flow_5<drop_prob_PCl_flow_5)
@@ -1194,8 +1194,8 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 	drop_prob_Pl_flow_3=0;
 	drop_prob_Pl_flow_4=0;
 	drop_prob_Pl_flow_5=0;
-	int coupling_factor=2;
-	int tempC = (PIE_MAX_PROB/coupling_factor)/coupling_factor;
+	//int coupling_factor=2;
+	//int tempC = (PIE_MAX_PROB/coupling_factor)/coupling_factor;
 
 	
 
