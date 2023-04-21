@@ -86,12 +86,6 @@
 STAILQ_HEAD(fq_pie_list, fq_pie_flow);
 
 
-uint32_t drop_prob_Pc_flow_0;
-uint32_t drop_prob_Pc_flow_1;
-uint32_t drop_prob_Pc_flow_2;
-uint32_t drop_prob_Pl_flow_3;
-uint32_t drop_prob_Pl_flow_4;
-uint32_t drop_prob_Pl_flow_5;
 
 /* FQ_PIE parameters including PIE */
 struct dn_sch_fq_pie_parms {
@@ -431,7 +425,7 @@ fq_calculate_drop_prob(void *x)
 	struct dn_aqm_pie_parms *pprms; 
 	int64_t p, prob, oldprob;
 	int p_isneg;
-	printf("fq_calculate_drop_prob \n");
+	//printf("fq_calculate_drop_prob \n");
 
 	pprms = pst->parms;
 	prob = pst->drop_prob;
@@ -524,7 +518,7 @@ fq_calculate_drop_prob(void *x)
 
 	pst->drop_prob = prob;
 
-	printf("drop_prob: %d \n",pst->drop_prob);
+	//printf("drop_prob: %d \n",pst->drop_prob);
 
 	/* store current delay value */
 	pst->qdelay_old = pst->current_qdelay;
@@ -931,7 +925,7 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	idx = fq_pie_classify_flow(m, param->flows_cnt/2, si);
 
 	//printf("Is Packet ECN-Marked,%d \n",ecn_mark(m));	
-	printf("classify done \n");
+	//printf("classify done \n");
 
 	
 
@@ -966,12 +960,10 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	if(ecn_test_check==1)
 	{
 		idx=idx+3;
-		printf("already marked , flow index: %d\n", idx);
-		
+				
 	}
 		
-	else
-		printf("Non-ECN, flow index: %d\n", idx);
+	
 
 	
 	
@@ -1125,7 +1117,7 @@ static int
 fq_pie_new_sched(struct dn_sch_inst *_si)
 {
 
-	printf("fq_pie_new_sched \n");
+	//printf("fq_pie_new_sched \n");
 	struct fq_pie_si *si;
 	struct dn_queue *q;
 	struct fq_pie_schk *schk;
@@ -1172,7 +1164,7 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 	STAILQ_INIT(&si->newflows);
 	STAILQ_INIT(&si->oldflows);
 
-	printf("flows_cnt: %d \n",schk->cfg.flows_cnt);
+	//printf("flows_cnt: %d \n",schk->cfg.flows_cnt);
 
 	/* init the flows (sub-queues) */
 	for (i = 0; i < schk->cfg.flows_cnt; i++) {
