@@ -93,8 +93,6 @@ uint32_t drop_prob_Pl_flow_3;
 uint32_t drop_prob_Pl_flow_4;
 uint32_t drop_prob_Pl_flow_5;
 
-uint32_t P_Cmax;
-
 /* FQ_PIE parameters including PIE */
 struct dn_sch_fq_pie_parms {
 	struct dn_aqm_pie_parms	pcfg;	/* PIE configuration Parameters */
@@ -527,18 +525,6 @@ fq_calculate_drop_prob(void *x)
 	pst->drop_prob = prob;
 
 	printf("drop_prob: %d \n",pst->drop_prob);
-	if(q->flow_index==0)
-		drop_prob_Pc_flow_0=pst->drop_prob;
-	if(q->flow_index==1)
-		drop_prob_Pc_flow_1=pst->drop_prob;
-	if(q->flow_index==2)
-		drop_prob_Pc_flow_2=pst->drop_prob;
-	if(q->flow_index==3)
-		drop_prob_Pl_flow_3=pst->drop_prob;
-	if(q->flow_index==4)
-		drop_prob_Pl_flow_4=pst->drop_prob;
-	if(q->flow_index==5)
-		drop_prob_Pl_flow_5=pst->drop_prob;
 
 	/* store current delay value */
 	pst->qdelay_old = pst->current_qdelay;
@@ -758,54 +744,11 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 	struct pie_status *pst;
 	struct dn_aqm_pie_parms *pprms;
 	int t;
-	int coupling_factor=2;
 
 	len = m->m_pkthdr.len;
 	pst  = &q->pst;
 	pprms = pst->parms;
 	t = ENQUE;
-	int64_t prob;
-	uint32_t drop_prob_PCl_flow_3;
-	uint32_t drop_prob_PCl_flow_4;
-	uint32_t drop_prob_PCl_flow_5;
-
-	if(q->flow_index==0 || q->flow_index==1 || q->flow_index==2 )
-		prob=(pst->drop_prob*pst->drop_prob)/PIE_MAX_PROB;
-
-	if(q->flow_index==3)
-	{
-		drop_prob_PCl_flow_3=drop_prob_Pc_flow_0*coupling_factor;
-		if(drop_prob_Pl_flow_3<drop_prob_PCl_flow_3)
-			prob=drop_prob_PCl_flow_3;
-		else
-			prob=drop_prob_Pl_flow_3;
-	}
-		
-	if(q->flow_index==4)
-	{
-		drop_prob_PCl_flow_4=drop_prob_Pc_flow_1*coupling_factor;
-		if(drop_prob_Pl_flow_4<drop_prob_PCl_flow_4)
-			prob=drop_prob_PCl_flow_4;
-		else
-			prob=drop_prob_Pl_flow_4;
-	}
-	if(q->flow_index==5)
-	{
-		drop_prob_PCl_flow_5=drop_prob_Pc_flow_2*coupling_factor;
-		if(drop_prob_Pl_flow_5<drop_prob_PCl_flow_5)
-			prob=drop_prob_PCl_flow_5;
-		else
-			prob=drop_prob_Pl_flow_5;
-	}
-
-	if(prob < 0) 
-	{
-		prob = 0;
-	} 
-	else if(prob > PIE_MAX_PROB)
-	{
-		prob = PIE_MAX_PROB;
-	}
 
 	/* drop/mark the packet when PIE is active and burst time elapsed */
 	if (pst->sflags & PIE_ACTIVE && pst->burst_allowance == 0
@@ -814,7 +757,7 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 			 * if drop_prob over ECN threshold, drop the packet 
 			 * otherwise mark and enqueue it.
 			 */
-			if (pprms->flags & PIE_ECN_ENABLED && prob < 
+			if (pprms->flags & PIE_ECN_ENABLED && pst->drop_prob < 
 				(pprms->max_ecnth << (PIE_PROB_BITS - PIE_FIX_POINT_BITS))
 				&& ecn_mark(m))
 				t = ENQUE;
@@ -829,7 +772,7 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 	}
 
 	/*  reset burst tolerance and optinally turn PIE off*/
-	if (prob == 0 && pst->current_qdelay < (pprms->qdelay_ref >> 1)
+	if (pst->drop_prob == 0 && pst->current_qdelay < (pprms->qdelay_ref >> 1)
 		&& pst->qdelay_old < (pprms->qdelay_ref >> 1)) {
 			
 			pst->burst_allowance = pprms->max_burst;
@@ -1188,16 +1131,6 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 	struct fq_pie_schk *schk;
 	struct fq_pie_flow *flows;
 	int i;
-	drop_prob_Pc_flow_0=0;
-	drop_prob_Pc_flow_1=0;
-	drop_prob_Pc_flow_2=0;
-	drop_prob_Pl_flow_3=0;
-	drop_prob_Pl_flow_4=0;
-	drop_prob_Pl_flow_5=0;
-	//int coupling_factor=2;
-	//int tempC = (PIE_MAX_PROB/coupling_factor)/coupling_factor;
-
-	
 
 	si = (struct fq_pie_si *)_si;
 	schk = (struct fq_pie_schk *)(_si->sched+1);
