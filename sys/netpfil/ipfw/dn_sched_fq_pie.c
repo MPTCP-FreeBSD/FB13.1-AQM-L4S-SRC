@@ -85,6 +85,16 @@
 /* list of queues */
 STAILQ_HEAD(fq_pie_list, fq_pie_flow);
 
+
+uint32_t drop_prob_Pc_flow_0;
+uint32_t drop_prob_Pc_flow_1;
+uint32_t drop_prob_Pc_flow_2;
+uint32_t drop_prob_Pl_flow_3;
+uint32_t drop_prob_Pl_flow_4;
+uint32_t drop_prob_Pl_flow_5;
+
+uint32_t P_Cmax;
+
 /* FQ_PIE parameters including PIE */
 struct dn_sch_fq_pie_parms {
 	struct dn_aqm_pie_parms	pcfg;	/* PIE configuration Parameters */
@@ -108,6 +118,7 @@ struct fq_pie_flow {
 	struct mq	mq;	/* list of packets */
 	struct flow_stats stats;	/* statistics */
 	int deficit;
+	int flow_index;
 	int active;		/* 1: flow is active (in a list) */
 	struct pie_status pst;	/* pie status variables */
 	struct fq_pie_si_extra *psi_extra;
@@ -330,7 +341,6 @@ fq_update_stats(struct fq_pie_flow *q, struct fq_pie_si *si, int len,
 }
 
 
-
 /*
  * Extract a packet from the head of sub-queue 'q'
  * Return a packet or NULL if the queue is empty.
@@ -341,12 +351,12 @@ fq_pie_extract_head(struct fq_pie_flow *q, aqm_time_t *pkt_ts,
 	struct fq_pie_si *si, int getts)
 {
 	struct mbuf *m = q->mq.head;
-	printf("fq_pie_extract_head:Start fq_pie_extract_head \n");
+	//printf("fq_pie_extract_head:Start fq_pie_extract_head \n");
 
 	if (m == NULL)
 		return m;
 	q->mq.head = m->m_nextpkt;
-	printf("fq_pie_extract_head:Packet is not null \n");
+	//printf("fq_pie_extract_head:Packet is not null \n");
 
 	fq_update_stats(q, si, -m->m_pkthdr.len, 0);
 
@@ -365,7 +375,7 @@ fq_pie_extract_head(struct fq_pie_flow *q, aqm_time_t *pkt_ts,
 			m_tag_delete(m,mtag); 
 		}
 	}
-	printf("fq_pie_extract_head:Start fq_pie_extract_head ENDED\n");
+	//printf("fq_pie_extract_head:Start fq_pie_extract_head ENDED\n");
 	return m;
 }
 
@@ -423,6 +433,7 @@ fq_calculate_drop_prob(void *x)
 	struct dn_aqm_pie_parms *pprms; 
 	int64_t p, prob, oldprob;
 	int p_isneg;
+	printf("fq_calculate_drop_prob \n");
 
 	pprms = pst->parms;
 	prob = pst->drop_prob;
@@ -514,6 +525,20 @@ fq_calculate_drop_prob(void *x)
 	}
 
 	pst->drop_prob = prob;
+
+	printf("drop_prob: %d \n",pst->drop_prob);
+	if(q->flow_index==0)
+		drop_prob_Pc_flow_0=pst->drop_prob;
+	if(q->flow_index==1)
+		drop_prob_Pc_flow_1=pst->drop_prob;
+	if(q->flow_index==2)
+		drop_prob_Pc_flow_2=pst->drop_prob;
+	if(q->flow_index==3)
+		drop_prob_Pl_flow_3=pst->drop_prob;
+	if(q->flow_index==4)
+		drop_prob_Pl_flow_4=pst->drop_prob;
+	if(q->flow_index==5)
+		drop_prob_Pl_flow_5=pst->drop_prob;
 
 	/* store current delay value */
 	pst->qdelay_old = pst->current_qdelay;
@@ -733,11 +758,54 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 	struct pie_status *pst;
 	struct dn_aqm_pie_parms *pprms;
 	int t;
+	int coupling_factor=2;
 
 	len = m->m_pkthdr.len;
 	pst  = &q->pst;
 	pprms = pst->parms;
 	t = ENQUE;
+	int64_t prob;
+	uint32_t drop_prob_PCl_flow_3;
+	uint32_t drop_prob_PCl_flow_4;
+	uint32_t drop_prob_PCl_flow_5;
+
+	if(q->flow_index==0 || q->flow_index==1 || q->flow_index==2 )
+		prob=(pst->drop_prob*pst->drop_prob)/PIE_MAX_PROB;
+
+	if(q->flow_index==3)
+	{
+		drop_prob_PCl_flow_3=drop_prob_Pc_flow_0*coupling_factor;
+		if(drop_prob_Pl_flow_3<drop_prob_PCl_flow_3)
+			prob=drop_prob_PCl_flow_3;
+		else
+			prob=drop_prob_Pl_flow_3;
+	}
+		
+	if(q->flow_index==4)
+	{
+		drop_prob_PCl_flow_4=drop_prob_Pc_flow_1*coupling_factor;
+		if(drop_prob_Pl_flow_4<drop_prob_PCl_flow_4)
+			prob=drop_prob_PCl_flow_4;
+		else
+			prob=drop_prob_Pl_flow_4;
+	}
+	if(q->flow_index==5)
+	{
+		drop_prob_PCl_flow_5=drop_prob_Pc_flow_2*coupling_factor;
+		if(drop_prob_Pl_flow_5<drop_prob_PCl_flow_5)
+			prob=drop_prob_PCl_flow_5;
+		else
+			prob=drop_prob_Pl_flow_5;
+	}
+
+	if(prob < 0) 
+	{
+		prob = 0;
+	} 
+	else if(prob > PIE_MAX_PROB)
+	{
+		prob = PIE_MAX_PROB;
+	}
 
 	/* drop/mark the packet when PIE is active and burst time elapsed */
 	if (pst->sflags & PIE_ACTIVE && pst->burst_allowance == 0
@@ -746,7 +814,7 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 			 * if drop_prob over ECN threshold, drop the packet 
 			 * otherwise mark and enqueue it.
 			 */
-			if (pprms->flags & PIE_ECN_ENABLED && pst->drop_prob < 
+			if (pprms->flags & PIE_ECN_ENABLED && prob < 
 				(pprms->max_ecnth << (PIE_PROB_BITS - PIE_FIX_POINT_BITS))
 				&& ecn_mark(m))
 				t = ENQUE;
@@ -761,7 +829,7 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 	}
 
 	/*  reset burst tolerance and optinally turn PIE off*/
-	if (pst->drop_prob == 0 && pst->current_qdelay < (pprms->qdelay_ref >> 1)
+	if (prob == 0 && pst->current_qdelay < (pprms->qdelay_ref >> 1)
 		&& pst->qdelay_old < (pprms->qdelay_ref >> 1)) {
 			
 			pst->burst_allowance = pprms->max_burst;
@@ -908,6 +976,7 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	struct dn_queue *mainq;
 	struct fq_pie_flow *flows;
 	int idx, drop, i, maxidx;
+	int ecn_test_check=0;
 
 	mainq = (struct dn_queue *)(_si + 1);
 	si = (struct fq_pie_si *)_si;
@@ -916,7 +985,71 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	param = &schk->cfg;
 
 	 /* classify a packet to queue number*/
-	idx = fq_pie_classify_flow(m, param->flows_cnt, si);
+	idx = fq_pie_classify_flow(m, param->flows_cnt/2, si);
+
+	//printf("Is Packet ECN-Marked,%d \n",ecn_mark(m));	
+	printf("classify done \n");
+
+	
+
+    /* Check if ECN is set in the IP header */
+    // if (ip_header->ip_tos & IPTOS_ECN_MASK) {
+    //     printf("ECN \n");
+    // } else {
+    //     printf("Non-ECN \n");
+    // }
+
+
+
+    struct ip *ip;
+	ip = (struct ip *)mtodo(m, dn_tag_get(m)->iphdr_off);
+	//uint16_t old;
+
+	if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_NOTECT)
+		ecn_test_check=0;
+	if ((ip->ip_tos & IPTOS_ECN_MASK) != 0)
+		ecn_test_check=1;
+
+	// /*
+	// 	* ecn-capable but not marked,
+	// 	* mark CE and update checksum
+	// 	*/
+	// old = *(uint16_t *)ip;
+	// ip->ip_tos |= IPTOS_ECN_CE;
+	// ip->ip_sum = cksum_adjust(ip->ip_sum, old, *(uint16_t *)ip);
+	// printf("ecn-capable but not marked mark CE and update checksum \n");
+
+
+	if(ecn_test_check==1)
+	{
+		idx=idx+3;
+		printf("already marked , flow index: %d\n", idx);
+		
+	}
+		
+	else
+		printf("Non-ECN, flow index: %d\n", idx);
+
+	
+	
+	
+
+
+
+
+
+
+
+	// if(ecn_mark(m))
+	// {
+	// 	idx=idx+3;
+	// 	printf("ECN \n");
+	// }
+	// else
+	// {
+	// 	printf("NON-ECN \n");
+	// }
+		
 
 	/* enqueue packet into appropriate queue using PIE AQM.
 	 * Note: 'pie_enqueue' function returns 1 only when it unable to 
@@ -1048,11 +1181,23 @@ fq_pie_dequeue(struct dn_sch_inst *_si)
 static int
 fq_pie_new_sched(struct dn_sch_inst *_si)
 {
+
+	printf("fq_pie_new_sched \n");
 	struct fq_pie_si *si;
 	struct dn_queue *q;
 	struct fq_pie_schk *schk;
 	struct fq_pie_flow *flows;
 	int i;
+	drop_prob_Pc_flow_0=0;
+	drop_prob_Pc_flow_1=0;
+	drop_prob_Pc_flow_2=0;
+	drop_prob_Pl_flow_3=0;
+	drop_prob_Pl_flow_4=0;
+	drop_prob_Pl_flow_5=0;
+	//int coupling_factor=2;
+	//int tempC = (PIE_MAX_PROB/coupling_factor)/coupling_factor;
+
+	
 
 	si = (struct fq_pie_si *)_si;
 	schk = (struct fq_pie_schk *)(_si->sched+1);
@@ -1094,10 +1239,13 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 	STAILQ_INIT(&si->newflows);
 	STAILQ_INIT(&si->oldflows);
 
+	printf("flows_cnt: %d \n",schk->cfg.flows_cnt);
+
 	/* init the flows (sub-queues) */
 	for (i = 0; i < schk->cfg.flows_cnt; i++) {
 		flows[i].pst.parms = &schk->cfg.pcfg;
 		flows[i].psi_extra = si->si_extra;
+		flows[i].flow_index=i;
 		pie_init(&flows[i], schk);
 	}
 
