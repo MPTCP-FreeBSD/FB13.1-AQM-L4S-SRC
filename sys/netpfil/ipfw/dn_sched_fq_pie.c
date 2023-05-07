@@ -433,7 +433,7 @@ fq_calculate_drop_prob(void *x)
 	struct dn_aqm_pie_parms *pprms; 
 	int64_t p, prob, oldprob;
 	int p_isneg;
-	printf("fq_calculate_drop_prob \n");
+	//printf("fq_calculate_drop_prob \n");
 
 	pprms = pst->parms;
 	prob = pst->drop_prob;
@@ -560,9 +560,11 @@ fq_calculate_drop_prob(void *x)
 	// printf("fq_calculate_drop_prob-%d,%lu,%lu,%u,%u,%u  \n",q->flow_index,q->stats.tot_pkts,q->stats.tot_bytes,q->stats.length,q->stats.len_bytes,q->stats.drops);
 
 
-	printf("fq_calculate_drop_prob-%d,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%lu,%u,%u,%u,%u,%lu,%lu,%u,%u,%u \n",q->flow_index,pprms->qdelay_ref,pprms->tupdate,pprms->max_burst,pprms->max_ecnth,pprms->alpha,pprms->beta,pprms->flags,
+	printf("fq_calculate_drop_prob-%d,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%lu,%u,%u,%u,%u,%lu,%lu,%u,%u,%u \n",q->flow_index,pprms->qdelay_ref,pprms->tupdate,
+	pprms->max_burst,pprms->max_ecnth,pprms->alpha,pprms->beta,pprms->flags,
 	pst->burst_allowance,pst->drop_prob,pst->current_qdelay,pst->qdelay_old,pst->accu_prob,
-	pst->measurement_start,pst->avg_dq_time,pst->dq_count,pst->sflags,q->stats.tot_pkts,q->stats.tot_bytes,q->stats.length,q->stats.len_bytes,q->stats.drops);
+	pst->measurement_start,pst->avg_dq_time,pst->dq_count,pst->sflags,q->stats.tot_pkts,q->stats.tot_bytes,q->stats.length,
+	q->stats.len_bytes,q->stats.drops);
 	if (pst->sflags & PIE_ACTIVE)
 	callout_reset_sbt(&pst->aqm_pie_callout,
 		(uint64_t)pprms->tupdate * SBT_1US,
@@ -1000,6 +1002,7 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	idx = fq_pie_classify_flow(m, param->flows_cnt/2, si);
 
 	//printf("Is Packet ECN-Marked,%d \n",ecn_mark(m));	
+	
 	printf("classify done \n");
 
 	
