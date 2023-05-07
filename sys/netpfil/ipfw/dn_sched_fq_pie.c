@@ -553,11 +553,11 @@ fq_calculate_drop_prob(void *x)
 
 	// pst-
 
-	printf("pprs-%d,%lu,%lu,%lu,%u,%u,%u,%u",q->flow_index,,pprms->qdelay_ref,pprms->tupdate,pprms->max_burst,pprms->max_ecnth,pprms->alpha,pprms->beta,pprms->flags);
+	printf("pprs-%d,%u,%u,%u,%u,%u,%u,%u",q->flow_index,pprms->qdelay_ref,pprms->tupdate,pprms->max_burst,pprms->max_ecnth,pprms->alpha,pprms->beta,pprms->flags);
 
-	printf("pst-%d,%lu,%lu,%lu,%lu,%llu,%lu,%lu,%lu,%lu,",q->flow_index,pst->burst_allowance,pst->drop_prob,pst->current_qdelay,pst->qdelay_old,pst->accu_prob,pst->measurement_start,pst->avg_dq_time,pst->dq_count,pst->sflags);
+	printf("pst-%d,%u,%u,%u,%u,%lu,%u,%u,%u,%u,",q->flow_index,pst->burst_allowance,pst->drop_prob,pst->current_qdelay,pst->qdelay_old,pst->accu_prob,pst->measurement_start,pst->avg_dq_time,pst->dq_count,pst->sflags);
 
-	printf("fq_calculate_drop_prob-%d,%llu,%llu,%lu,%lu,%lu  \n",q->flow_index,q->stats.tot_pkts,q->stats.tot_bytes,q->stats.length,q->stats.len_bytes,q->stats.drops);
+	printf("fq_calculate_drop_prob-%d,%lu,%lu,%u,%u,%u  \n",q->flow_index,q->stats.tot_pkts,q->stats.tot_bytes,q->stats.length,q->stats.len_bytes,q->stats.drops);
 
 	if (pst->sflags & PIE_ACTIVE)
 	callout_reset_sbt(&pst->aqm_pie_callout,
