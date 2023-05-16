@@ -946,10 +946,6 @@ fq_pie_classify_flow(struct mbuf *m, uint16_t fcount, struct fq_pie_si *si)
 		}
 
 		hash = jenkins_hash(tuple, 41, HASHINIT) %  fcount;
-		struct in_addr source_addr = {0};
-		source_addr.s_addr = ip->ip_src.s_addr;
-		printf("Source IP address: %s\n", inet_ntoa(source_addr));
-		printf("hash value: %hu\n",hash);
 		return hash;
 	} 
 //#endif
