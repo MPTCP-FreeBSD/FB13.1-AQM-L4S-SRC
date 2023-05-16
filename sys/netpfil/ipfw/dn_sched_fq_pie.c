@@ -973,6 +973,17 @@ fq_pie_classify_flow(struct mbuf *m, uint16_t fcount, struct fq_pie_si *si)
 	}
 	hash = jenkins_hash(tuple, 17, HASHINIT) % fcount;
 
+	struct in_addr source_addr = {0};
+	source_addr.s_addr = ip->ip_src.s_addr;
+
+	char ip_string[INET_ADDRSTRLEN];
+    inet_ntoa_r(source_addr, ip_string, sizeof(ip_string));
+
+    printf("IP address: %s\n", ip_string);
+
+	printf("Source IP address: %d\n", inet_ntoa(source_addr));
+	printf("hash value: %hu\n",hash);
+
 	return hash;
 }
 
