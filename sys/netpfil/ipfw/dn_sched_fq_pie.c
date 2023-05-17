@@ -979,7 +979,17 @@ fq_pie_classify_flow(struct mbuf *m, uint16_t fcount, struct fq_pie_si *si)
 	char ip_string[INET_ADDRSTRLEN];
     inet_ntoa_r(source_addr, ip_string);
 
-    printf("IP address: %s\n", ip_string);
+    printf("IP src address: %s\n", ip_string);
+
+
+
+	
+	source_addr.s_addr = ip->ip_dst.s_addr;
+
+	char ip_string[INET_ADDRSTRLEN];
+    inet_ntoa_r(source_addr, ip_string);
+
+    printf("IP dist address: %s\n", ip_string);
 
 
 	printf("hash value: %hu\n",hash);
