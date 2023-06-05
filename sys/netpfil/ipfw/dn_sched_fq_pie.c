@@ -526,7 +526,7 @@ fq_calculate_drop_prob(void *x)
 
 	pst->drop_prob = prob;
 
-	printf("drop_prob: %d \n",pst->drop_prob);
+	//printf("drop_prob: %d \n",pst->drop_prob);
 	if(q->flow_index==0)
 		drop_prob_Pc_flow_0=pst->drop_prob;
 	if(q->flow_index==1)
@@ -560,7 +560,7 @@ fq_calculate_drop_prob(void *x)
 	// printf("fq_calculate_drop_prob-%d,%lu,%lu,%u,%u,%u  \n",q->flow_index,q->stats.tot_pkts,q->stats.tot_bytes,q->stats.length,q->stats.len_bytes,q->stats.drops);
 
 
-	printf("\nfq_calculate_drop_prob-start,%d,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%lu,%u,%u,%u,%u,%lu,%lu,%u,%u,%u,end \n \n",q->flow_index,pprms->qdelay_ref,pprms->tupdate,
+	//printf("\nfq_calculate_drop_prob-start,%d,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%lu,%u,%u,%u,%u,%lu,%lu,%u,%u,%u,end \n \n",q->flow_index,pprms->qdelay_ref,pprms->tupdate,
 	pprms->max_burst,pprms->max_ecnth,pprms->alpha,pprms->beta,pprms->flags,
 	pst->burst_allowance,pst->drop_prob,pst->current_qdelay,pst->qdelay_old,pst->accu_prob,
 	pst->measurement_start,pst->avg_dq_time,pst->dq_count,pst->sflags,q->stats.tot_pkts,q->stats.tot_bytes,q->stats.length,
@@ -979,7 +979,7 @@ fq_pie_classify_flow(struct mbuf *m, uint16_t fcount, struct fq_pie_si *si)
 	char ip_string[INET_ADDRSTRLEN];
     inet_ntoa_r(source_addr, ip_string);
 
-    printf("IP src address: %s\n", ip_string);
+    //printf("IP src address: %s\n", ip_string);
 
 
 
@@ -989,10 +989,10 @@ fq_pie_classify_flow(struct mbuf *m, uint16_t fcount, struct fq_pie_si *si)
 	
     inet_ntoa_r(source_addr, ip_string);
 
-    printf("IP dist address: %s\n", ip_string);
+    //printf("IP dist address: %s\n", ip_string);
 
 
-	printf("hash value: %hu\n",hash);
+	//printf("hash value: %hu\n",hash);
 
 	return hash;
 }
@@ -1024,7 +1024,7 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 
 	//printf("Is Packet ECN-Marked,%d \n",ecn_mark(m));	
 	
-	printf("\nclassify done \n");
+	//printf("\nclassify done \n");
 
 	
 
@@ -1059,15 +1059,16 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	if(ecn_test_check==1)
 	{
 		idx=idx+3;
-		printf("\nalready marked , flow index: %d\n", idx);
+		//printf("\nalready marked , flow index: %d\n", idx);
 		
 	}
 		
 	else
-		printf("\nNon-ECN, flow index: %d\n", idx);
+	{
+		//printf("\nNon-ECN, flow index: %d\n", idx);
+		;
 
-	
-	
+	}
 	
 
 
