@@ -341,12 +341,12 @@ fq_pie_extract_head(struct fq_pie_flow *q, aqm_time_t *pkt_ts,
 	struct fq_pie_si *si, int getts)
 {
 	struct mbuf *m = q->mq.head;
-	printf("fq_pie_extract_head:Start fq_pie_extract_head \n");
+	//printf("fq_pie_extract_head:Start fq_pie_extract_head \n");
 
 	if (m == NULL)
 		return m;
 	q->mq.head = m->m_nextpkt;
-	printf("fq_pie_extract_head:Packet is not null \n");
+	//printf("fq_pie_extract_head:Packet is not null \n");
 
 	fq_update_stats(q, si, -m->m_pkthdr.len, 0);
 
@@ -365,7 +365,7 @@ fq_pie_extract_head(struct fq_pie_flow *q, aqm_time_t *pkt_ts,
 			m_tag_delete(m,mtag); 
 		}
 	}
-	printf("fq_pie_extract_head:Start fq_pie_extract_head ENDED\n");
+	//printf("fq_pie_extract_head:Start fq_pie_extract_head ENDED\n");
 	return m;
 }
 
