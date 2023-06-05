@@ -439,7 +439,7 @@ fq_codel_new_sched(struct dn_sch_inst *_si)
 	struct dn_queue *q;
 	struct fq_codel_schk *schk;
 	int i;
-	printf("fq_codel_new_sched");
+	//printf("fq_codel_new_sched");
 
 	si = (struct fq_codel_si *)_si;
 	schk = (struct fq_codel_schk *)(_si->sched+1);
