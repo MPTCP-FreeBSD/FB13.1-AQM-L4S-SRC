@@ -3,8 +3,6 @@ include		GENERIC
 options		KDB
 options		DDB
 
-options		ALQ
-
 options		BREAK_TO_DEBUGGER
 options 	ALT_BREAK_TO_DEBUGGER
 
