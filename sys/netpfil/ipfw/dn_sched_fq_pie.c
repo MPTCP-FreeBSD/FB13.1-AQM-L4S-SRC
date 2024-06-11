@@ -1012,6 +1012,7 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	struct fq_pie_flow *flows;
 	int idx, drop, i, maxidx;
 	int ecn_test_check=0;
+	
 
 	mainq = (struct dn_queue *)(_si + 1);
 	si = (struct fq_pie_si *)_si;
@@ -1042,8 +1043,6 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	//uint16_t old;
 
 	if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_NOTECT)
-		ecn_test_check=0;
-	if ((ip->ip_tos & IPTOS_ECN_MASK) != 0)
 		ecn_test_check=1;
 
 	// /*
