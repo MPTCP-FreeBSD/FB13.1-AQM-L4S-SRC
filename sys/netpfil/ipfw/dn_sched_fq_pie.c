@@ -1043,8 +1043,8 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 
 	// if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_NOTECT)
 	// 	ecn_test_check=0;
-	// if ((ip->ip_tos & IPTOS_ECN_MASK) != 0)
-	// 	ecn_test_check=1;
+	if ((ip->ip_tos & IPTOS_ECN_MASK) != 0)
+		ecn_test_check=1;
 
 	// /*
 	// 	* ecn-capable but not marked,
