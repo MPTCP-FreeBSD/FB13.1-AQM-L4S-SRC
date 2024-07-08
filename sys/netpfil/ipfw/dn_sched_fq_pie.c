@@ -82,11 +82,23 @@
 
 #define DN_SCHED_FQ_PIE 7
 
+#define L4S_QUEUE_SIZE 6
+
 VNET_DECLARE(unsigned long, io_pkt_drop);
 #define V_io_pkt_drop VNET(io_pkt_drop)
 
 /* list of queues */
 STAILQ_HEAD(fq_pie_list, fq_pie_flow) ;
+
+
+uint32_t drop_prob_Pc_flow_0;
+uint32_t drop_prob_Pc_flow_1;
+uint32_t drop_prob_Pc_flow_2;
+uint32_t drop_prob_Pl_flow_3;
+uint32_t drop_prob_Pl_flow_4;
+uint32_t drop_prob_Pl_flow_5;
+
+uint32_t P_Cmax;
 
 /* FQ_PIE parameters including PIE */
 struct dn_sch_fq_pie_parms {
@@ -111,6 +123,7 @@ struct fq_pie_flow {
 	struct mq	mq;	/* list of packets */
 	struct flow_stats stats;	/* statistics */
 	int deficit;
+	int flow_index;
 	int active;		/* 1: flow is active (in a list) */
 	struct pie_status pst;	/* pie status variables */
 	struct fq_pie_si_extra *psi_extra;
@@ -157,7 +170,7 @@ struct dn_sch_fq_pie_parms
  fq_pie_sysctl = {{15000 * AQM_TIME_1US, 15000 * AQM_TIME_1US,
 	150000 * AQM_TIME_1US, PIE_SCALE * 0.1, PIE_SCALE * 0.125, 
 	PIE_SCALE * 1.25,	PIE_CAPDROP_ENABLED | PIE_DERAND_ENABLED},
-	1024, 10240, 1514};
+	L4S_QUEUE_SIZE, 10240, 1514};
 
 static int
 fqpie_sysctl_alpha_beta_handler(SYSCTL_HANDLER_ARGS)
@@ -276,7 +289,7 @@ SYSCTL_PROC(_net_inet_ip_dummynet_fqpie, OID_AUTO, beta,
 SYSCTL_UINT(_net_inet_ip_dummynet_fqpie, OID_AUTO, quantum,
 	CTLFLAG_RW, &fq_pie_sysctl.quantum, 1514, "quantum for FQ_PIE");
 SYSCTL_UINT(_net_inet_ip_dummynet_fqpie, OID_AUTO, flows,
-	CTLFLAG_RW, &fq_pie_sysctl.flows_cnt, 1024, "Number of queues for FQ_PIE");
+	CTLFLAG_RW, &fq_pie_sysctl.flows_cnt, L4S_QUEUE_SIZE, "Number of queues for FQ_PIE");
 SYSCTL_UINT(_net_inet_ip_dummynet_fqpie, OID_AUTO, limit,
 	CTLFLAG_RW, &fq_pie_sysctl.limit, 10240, "limit for FQ_PIE");
 #endif
@@ -473,6 +486,20 @@ fq_calculate_drop_prob(void *x)
 	}
 
 	pst->drop_prob = prob;
+
+		//Storing Base probabbilities of each flow
+	if(q->flow_index==0)
+		drop_prob_Pc_flow_0=pst->drop_prob;
+	if(q->flow_index==1)
+		drop_prob_Pc_flow_1=pst->drop_prob;
+	if(q->flow_index==2)
+		drop_prob_Pc_flow_2=pst->drop_prob;
+	if(q->flow_index==3)
+		drop_prob_Pl_flow_3=pst->drop_prob;
+	if(q->flow_index==4)
+		drop_prob_Pl_flow_4=pst->drop_prob;
+	if(q->flow_index==5)
+		drop_prob_Pl_flow_5=pst->drop_prob;
 
 	/* store current delay value */
 	pst->qdelay_old = pst->current_qdelay;
@@ -692,11 +719,55 @@ pie_enqueue(struct fq_pie_flow *q, struct mbuf* m, struct fq_pie_si *si)
 	struct pie_status *pst;
 	struct dn_aqm_pie_parms *pprms;
 	int t;
+	int coupling_factor=2;
 
 	len = m->m_pkthdr.len;
 	pst  = &q->pst;
 	pprms = pst->parms;
 	t = ENQUE;
+	int64_t prob;
+	uint32_t drop_prob_PCl_flow_3;
+	uint32_t drop_prob_PCl_flow_4;
+	uint32_t drop_prob_PCl_flow_5;
+
+	if(q->flow_index==0 || q->flow_index==1 || q->flow_index==2 )
+		prob=(pst->drop_prob*pst->drop_prob)/PIE_MAX_PROB;
+
+	if(q->flow_index==3)
+	{
+		drop_prob_PCl_flow_3=drop_prob_Pc_flow_0*coupling_factor;
+		if(drop_prob_Pl_flow_3<drop_prob_PCl_flow_3)
+			prob=drop_prob_PCl_flow_3;
+		else
+			prob=drop_prob_Pl_flow_3;
+	}
+		
+	if(q->flow_index==4)
+	{
+		drop_prob_PCl_flow_4=drop_prob_Pc_flow_1*coupling_factor;
+		if(drop_prob_Pl_flow_4<drop_prob_PCl_flow_4)
+			prob=drop_prob_PCl_flow_4;
+		else
+			prob=drop_prob_Pl_flow_4;
+	}
+	if(q->flow_index==5)
+	{
+		drop_prob_PCl_flow_5=drop_prob_Pc_flow_2*coupling_factor;
+		if(drop_prob_Pl_flow_5<drop_prob_PCl_flow_5)
+			prob=drop_prob_PCl_flow_5;
+		else
+			prob=drop_prob_Pl_flow_5;
+	}
+
+	if(prob < 0) 
+	{
+		prob = 0;
+	} 
+	else if(prob > PIE_MAX_PROB)
+	{
+		prob = PIE_MAX_PROB;
+	}
+
 
 	/* drop/mark the packet when PIE is active and burst time elapsed */
 	if (pst->sflags & PIE_ACTIVE && pst->burst_allowance == 0
@@ -875,7 +946,17 @@ fq_pie_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	param = &schk->cfg;
 
 	 /* classify a packet to queue number*/
-	idx = fq_pie_classify_flow(m, param->flows_cnt, si);
+	// idx = fq_pie_classify_flow(m, param->flows_cnt, si);
+
+	/* classify a packet to queue number*/
+	idx = fq_pie_classify_flow(m, param->flows_cnt/2, si);
+
+    struct ip *ip;
+	ip = (struct ip *)mtodo(m, dn_tag_get(m)->iphdr_off);
+	//uint16_t old;
+
+	if ((ip->ip_tos & IPTOS_ECN_MASK) != 0)
+		idx=idx+(int)(param->flows_cnt / 2);
 
 	/* enqueue packet into appropriate queue using PIE AQM.
 	 * Note: 'pie_enqueue' function returns 1 only when it unable to 
@@ -1013,6 +1094,13 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 	struct fq_pie_flow *flows;
 	int i;
 
+	drop_prob_Pc_flow_0=0;
+	drop_prob_Pc_flow_1=0;
+	drop_prob_Pc_flow_2=0;
+	drop_prob_Pl_flow_3=0;
+	drop_prob_Pl_flow_4=0;
+	drop_prob_Pl_flow_5=0;
+
 	si = (struct fq_pie_si *)_si;
 	schk = (struct fq_pie_schk *)(_si->sched+1);
 
@@ -1057,6 +1145,7 @@ fq_pie_new_sched(struct dn_sch_inst *_si)
 	for (i = 0; i < schk->cfg.flows_cnt; i++) {
 		flows[i].pst.parms = &schk->cfg.pcfg;
 		flows[i].psi_extra = si->si_extra;
+		flows[i].flow_index=i;
 		pie_init(&flows[i], schk);
 	}
 
@@ -1146,7 +1235,7 @@ fq_pie_config(struct dn_schk *_schk)
 			fqp_cfg->limit = fq_pie_sysctl.limit;
 		else
 			fqp_cfg->limit = ep->par[8];
-		if (ep->par[9] < 0)
+		if (1)
 			fqp_cfg->flows_cnt = fq_pie_sysctl.flows_cnt;
 		else
 			fqp_cfg->flows_cnt = ep->par[9];
