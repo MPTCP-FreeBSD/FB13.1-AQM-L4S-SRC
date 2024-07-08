@@ -77,6 +77,7 @@ static struct _s_x dummynet_params[] = {
 	{ "fq_codel",	TOK_FQ_CODEL}, /* FQ-Codel  */
 	{ "pie",		TOK_PIE}, /* PIE AQM */
 	{ "fq_pie",		TOK_FQ_PIE}, /* FQ-PIE */
+	{ "l4s",		TOK_L4S}, /* FQ-PIE */
 #endif
 	{ "bw",			TOK_BW },
 	{ "bandwidth",		TOK_BW },
@@ -314,6 +315,44 @@ get_extra_parms(uint32_t nr, char *out, int subtype)
 			us_to_time(ep->par[1], strt2);
 			us_to_time(ep->par[2], strt3);
 			l = sprintf(out, "  FQ_PIE target %s tupdate %s alpha "
+				"%g beta %g max_burst %s max_ecnth %.3g"
+				" quantum %jd limit %jd flows %jd",
+				strt1,
+				strt2,
+				ep->par[4] / (float) PIE_SCALE,
+				ep->par[5] / (float) PIE_SCALE,
+				strt3,
+				ep->par[3] / (float) PIE_SCALE,
+				(intmax_t) ep->par[7],
+				(intmax_t) ep->par[8],
+				(intmax_t) ep->par[9]
+			);
+			
+			if (ep->par[6] & PIE_ECN_ENABLED)
+				l += sprintf(out + l, " ECN");
+			else
+				l += sprintf(out + l, " NoECN");
+			if (ep->par[6] & PIE_CAPDROP_ENABLED)
+				l += sprintf(out + l, " CapDrop");
+			else
+				l += sprintf(out + l, " NoCapDrop");
+			if (ep->par[6] & PIE_ON_OFF_MODE_ENABLED)
+				l += sprintf(out + l, " OnOff");
+			if (ep->par[6] & PIE_DEPRATEEST_ENABLED)
+				l += sprintf(out + l, " DRE");
+			else
+				l += sprintf(out + l, " TS");
+			if (ep->par[6] & PIE_DERAND_ENABLED)
+				l += sprintf(out + l, " Derand");
+			else
+				l += sprintf(out + l, " NoDerand");
+			l += sprintf(out + l, "\n");
+		}
+		else 	if (!strcasecmp(ep->name,"L4S")) {
+			us_to_time(ep->par[0], strt1);
+			us_to_time(ep->par[1], strt2);
+			us_to_time(ep->par[2], strt3);
+			l = sprintf(out, "  L4S target %s tupdate %s alpha "
 				"%g beta %g max_burst %s max_ecnth %.3g"
 				" quantum %jd limit %jd flows %jd",
 				strt1,
@@ -1203,7 +1242,7 @@ process_extra_parms(int *ac, char **av, struct dn_extra_parms *ep,
 				ep->par[6] &= ~PIE_DERAND_ENABLED;
 				break;
 
-			/* Config fq_pie parameters */
+			/* Config L4S parameters */
 			case TOK_QUANTUM:
 				if (type != TOK_FQ_PIE)
 					errx(EX_DATAERR, "quantum is not for pie\n");
@@ -1240,6 +1279,152 @@ process_extra_parms(int *ac, char **av, struct dn_extra_parms *ep,
 			}
 		}
 		break;
+	
+
+	case TOK_L4S:
+		/* PIE
+		 * 0- target , 1- tupdate, 2- max_burst,
+		 * 3- max_ecnth, 4- alpha,
+		 * 5- beta, 6- flags
+		 * L4S
+		 * 7- quantum, 8- limit, 9- flows
+		 */
+
+		if ( type == TOK_PIE)
+			ep->par[6] = PIE_CAPDROP_ENABLED | PIE_DEPRATEEST_ENABLED
+				| PIE_DERAND_ENABLED;
+		else
+			/* for L4S, use TS mode */
+			ep->par[6] = PIE_CAPDROP_ENABLED |  PIE_DERAND_ENABLED
+				| PIE_ECN_ENABLED;
+
+		while (*ac > 0) {
+			int tok = match_token(aqm_params, *av);
+			(*ac)--; av++;
+			switch(tok) {
+			case TOK_TARGET:
+				if (*ac <= 0 || time_to_us(av[0]) < 0)
+					errx(EX_DATAERR, "target needs time\n");
+					
+				ep->par[0] = time_to_us(av[0]);
+				(*ac)--; av++;
+				break;
+				
+			case TOK_TUPDATE:
+				if (*ac <= 0 || time_to_us(av[0]) < 0)
+					errx(EX_DATAERR, "tupdate needs time\n");
+					
+				ep->par[1] = time_to_us(av[0]);
+				(*ac)--; av++;
+				break;
+				
+			case TOK_MAX_BURST:
+				if (*ac <= 0 || time_to_us(av[0]) < 0)
+					errx(EX_DATAERR, "max_burst needs time\n");
+					
+				ep->par[2] = time_to_us(av[0]);
+				(*ac)--; av++;
+				break;
+				
+			case TOK_MAX_ECNTH:
+				if (*ac <= 0 || !is_valid_number(av[0]))
+					errx(EX_DATAERR, "max_ecnth needs number\n");
+					
+				ep->par[3] = atof(av[0]) * PIE_SCALE;
+				(*ac)--; av++;
+				break;
+
+			case TOK_ALPHA:
+				if (*ac <= 0 || !is_valid_number(av[0]))
+					errx(EX_DATAERR, "alpha needs number\n");
+					
+				ep->par[4] = atof(av[0]) * PIE_SCALE;
+				(*ac)--; av++;
+				break;
+
+			case TOK_BETA:
+				if (*ac <= 0 || !is_valid_number(av[0]))
+					errx(EX_DATAERR, "beta needs number\n");
+					
+				ep->par[5] = atof(av[0]) * PIE_SCALE;
+				(*ac)--; av++;
+				break;
+
+			case TOK_ECN:
+				ep->par[6] |= PIE_ECN_ENABLED;
+				break;
+			case TOK_NO_ECN:
+				ep->par[6] &= ~PIE_ECN_ENABLED;
+				break;
+
+			case TOK_CAPDROP:
+				ep->par[6] |= PIE_CAPDROP_ENABLED;
+				break;
+			case TOK_NO_CAPDROP:
+				ep->par[6] &= ~PIE_CAPDROP_ENABLED;
+				break;
+
+			case TOK_ONOFF:
+				ep->par[6] |= PIE_ON_OFF_MODE_ENABLED;
+				break;
+				
+			case TOK_DRE:
+				ep->par[6] |= PIE_DEPRATEEST_ENABLED;
+				break;
+
+			case TOK_TS:
+				ep->par[6] &= ~PIE_DEPRATEEST_ENABLED;
+				break;
+
+			case TOK_DERAND:
+				ep->par[6] |= PIE_DERAND_ENABLED;
+				break;
+			case TOK_NO_DERAND:
+				ep->par[6] &= ~PIE_DERAND_ENABLED;
+				break;
+
+			/* Config L4S parameters */
+			case TOK_QUANTUM:
+				if (type != TOK_L4S)
+					errx(EX_DATAERR, "quantum is not for pie\n");
+				if (*ac <= 0 || !is_valid_number(av[0]))
+					errx(EX_DATAERR, "quantum needs number\n");
+
+				ep->par[7]= atoi(av[0]);
+				(*ac)--; av++;
+				break;
+
+			case TOK_LIMIT:
+				if (type != TOK_L4S)
+					errx(EX_DATAERR, "limit is not for pie, use queue instead\n");
+				if (*ac <= 0 || !is_valid_number(av[0]))
+					errx(EX_DATAERR, "limit needs number\n");
+
+				ep->par[8] = atoi(av[0]);
+				(*ac)--; av++;
+				break;
+
+			case TOK_FLOWS:
+				if (type != TOK_L4S)
+					errx(EX_DATAERR, "flows is not for pie\n");
+				if (*ac <= 0 || !is_valid_number(av[0]))
+					errx(EX_DATAERR, "flows needs number\n");
+
+				ep->par[9] = atoi(av[0]);
+				(*ac)--; av++;
+				break;
+
+
+			default:
+				printf("%s is invalid parameter\n", av[-1]);
+			}
+		}
+		break;
+	
+	
+	
+	
+	
 	}
 
 	return 0;
@@ -1661,7 +1846,7 @@ end_mask:
 			/* if fq_codel is selected, consider all tokens after it
 			 * as parameters
 			 */
-			if (!strcasecmp(av[0],"fq_codel") || !strcasecmp(av[0],"fq_pie")){
+			if (!strcasecmp(av[0],"fq_codel") || !strcasecmp(av[0],"fq_pie") || !strcasecmp(av[0],"l4s")){
 				strlcpy(sch_extra->name, av[0],
 				    sizeof(sch_extra->name));
 				sch_extra->oid.subtype = DN_SCH_PARAMS;
