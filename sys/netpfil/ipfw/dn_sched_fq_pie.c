@@ -84,6 +84,8 @@
 
 #define L4S_QUEUE_SIZE 6
 
+// Fully correct L4S in fq-pie file
+
 VNET_DECLARE(unsigned long, io_pkt_drop);
 #define V_io_pkt_drop VNET(io_pkt_drop)
 
