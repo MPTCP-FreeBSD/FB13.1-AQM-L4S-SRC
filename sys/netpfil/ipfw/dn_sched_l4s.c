@@ -352,12 +352,12 @@ l4s_extract_head(struct l4s_flow *q, aqm_time_t *pkt_ts,
 	struct l4s_si *si, int getts)
 {
 	struct mbuf *m = q->mq.head;
-	printf("l4s_extract_head:Start l4s_extract_head \n");	
+	//printf("l4s_extract_head:Start l4s_extract_head \n");	
 
 	if (m == NULL)
 		return m;
 	q->mq.head = m->m_nextpkt;
-	printf("l4s_extract_head:Packet is not null \n");
+	//printf("l4s_extract_head:Packet is not null \n");
 
 	fq_update_stats(q, si, -m->m_pkthdr.len, 0);
 
@@ -376,7 +376,7 @@ l4s_extract_head(struct l4s_flow *q, aqm_time_t *pkt_ts,
 			m_tag_delete(m,mtag); 
 		}
 	}
-	printf("l4s_extract_head:Start l4s_extract_head ENDED\n");
+	//printf("l4s_extract_head:Start l4s_extract_head ENDED\n");
 	return m;
 }
 
@@ -394,7 +394,7 @@ fq_calculate_drop_prob(void *x)
 	int64_t p, prob, oldprob;
 	// aqm_time_t now;
 	int p_isneg;
-	printf("startfq_calculate_drop_prob \n");
+	//printf("startfq_calculate_drop_prob \n");
 
 	// now = AQM_UNOW;
 	pprms = pst->parms;
@@ -487,7 +487,7 @@ fq_calculate_drop_prob(void *x)
 	}
 
 	pst->drop_prob = prob;
-	printf("drop_prob: %d \n",pst->drop_prob);
+	//printf("drop_prob: %d \n",pst->drop_prob);
 
 		//Storing Base probabbilities of each flow
 	if(q->flow_index==0)
@@ -513,7 +513,7 @@ fq_calculate_drop_prob(void *x)
 		else 
 			pst->burst_allowance = 0;
 	}
-	printf("\nfq_calculate_drop_prob-start,%d,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%lu,%u,%u,%u,%u,%lu,%lu,%u,%u,%u,end \n \n",q->flow_index,pprms->qdelay_ref,pprms->tupdate,
+	//printf("\nfq_calculate_drop_prob-start,%d,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%lu,%u,%u,%u,%u,%lu,%lu,%u,%u,%u,end \n \n",q->flow_index,pprms->qdelay_ref,pprms->tupdate,
 	pprms->max_burst,pprms->max_ecnth,pprms->alpha,pprms->beta,pprms->flags,
 	pst->burst_allowance,pst->drop_prob,pst->current_qdelay,pst->qdelay_old,pst->accu_prob,
 	pst->measurement_start,pst->avg_dq_time,pst->dq_count,pst->sflags,q->stats.tot_pkts,q->stats.tot_bytes,q->stats.length,
@@ -535,7 +535,7 @@ fq_activate_pie(struct l4s_flow *q)
 { 
 	struct pie_status *pst = &q->pst;
 	struct dn_aqm_pie_parms *pprms;
-	printf("start fq_activate_pie \n");
+	//printf("start fq_activate_pie \n");
 
 	mtx_lock(&pst->lock_mtx);
 	pprms = pst->parms;
@@ -555,7 +555,7 @@ fq_activate_pie(struct l4s_flow *q)
 		0, fq_calculate_drop_prob, q, 0);
 
 	mtx_unlock(&pst->lock_mtx);
-	printf("end fq_activate_pie \n");
+	//printf("end fq_activate_pie \n");
 }
 
  /* 
@@ -564,13 +564,13 @@ fq_activate_pie(struct l4s_flow *q)
 __inline static void
 fq_deactivate_pie(struct pie_status *pst)
 {
-	printf("start fq_deactivate_pie \n"); 
+	//printf("start fq_deactivate_pie \n"); 
 	mtx_lock(&pst->lock_mtx);
 	pst->sflags &= ~(PIE_ACTIVE | PIE_INMEASUREMENT);
 	callout_stop(&pst->aqm_pie_callout);
 	//D("PIE Deactivated");
 	mtx_unlock(&pst->lock_mtx);
-	printf("end fq_deactivate_pie \n");
+	//printf("end fq_deactivate_pie \n");
 }
 
  /* 
@@ -579,7 +579,7 @@ fq_deactivate_pie(struct pie_status *pst)
 static int
 pie_init(struct l4s_flow *q, struct l4s_schk *l4s_schk)
 {
-	printf("start pie_init \n");
+	//printf("start pie_init \n");
 	struct pie_status *pst=&q->pst;
 	struct dn_aqm_pie_parms *pprms = pst->parms;
 
@@ -599,7 +599,7 @@ pie_init(struct l4s_flow *q, struct l4s_schk *l4s_schk)
 		callout_init_mtx(&pst->aqm_pie_callout, &pst->lock_mtx,
 			CALLOUT_RETURNUNLOCKED);
 	}
-	printf("end pie_init \n");
+	//printf("end pie_init \n");
 
 	return err;
 }
@@ -612,7 +612,7 @@ pie_init(struct l4s_flow *q, struct l4s_schk *l4s_schk)
 static void
 l4s_callout_cleanup(void *x)
 {
-	printf("start l4s_callout_cleanup \n");
+	//printf("start l4s_callout_cleanup \n");
 	struct l4s_flow *q = x;
 	struct pie_status *pst = &q->pst;
 	struct l4s_si_extra *psi_extra;
@@ -633,7 +633,7 @@ l4s_callout_cleanup(void *x)
 	}
 	dummynet_sched_unlock();
 	// Original DN_BH_WUNLOCK();
-	printf("end l4s_callout_cleanup \n");
+	//printf("end l4s_callout_cleanup \n");
 }
 
 /* 
@@ -643,14 +643,14 @@ l4s_callout_cleanup(void *x)
 static int
 pie_cleanup(struct l4s_flow *q)
 {
-	printf("start pie_cleanup \n");
+	//printf("start pie_cleanup \n");
 	struct pie_status *pst  = &q->pst;
 
 	mtx_lock(&pst->lock_mtx);
 	callout_reset_sbt(&pst->aqm_pie_callout,
 		SBT_1US, 0, l4s_callout_cleanup, q, 0);
 	mtx_unlock(&pst->lock_mtx);
-	printf("end pie_cleanup \n");
+	//printf("end pie_cleanup \n");
 	return 0;
 }
 
@@ -661,7 +661,7 @@ pie_cleanup(struct l4s_flow *q)
  static struct mbuf *
 pie_dequeue(struct l4s_flow *q, struct l4s_si *si)
 {
-	printf("start pie_dequeue \n");
+	//printf("start pie_dequeue \n");
 	struct mbuf *m;
 	struct dn_aqm_pie_parms *pprms;
 	struct pie_status *pst;
@@ -724,7 +724,7 @@ pie_dequeue(struct l4s_flow *q, struct l4s_si *si)
 		pst->current_qdelay = now - pkt_ts;
 	
 
-	printf("end pie_dequeue \n");
+	//printf("end pie_dequeue \n");
 
 	return m;	
 }
@@ -738,7 +738,7 @@ pie_dequeue(struct l4s_flow *q, struct l4s_si *si)
 static int
 pie_enqueue(struct l4s_flow *q, struct mbuf* m, struct l4s_si *si)
 {
-	printf("start pie_enqueue \n");
+	//printf("start pie_enqueue \n");
 	uint64_t len;
 	struct pie_status *pst;
 	struct dn_aqm_pie_parms *pprms;
@@ -849,7 +849,7 @@ pie_enqueue(struct l4s_flow *q, struct mbuf* m, struct l4s_si *si)
 		FREE_PKT(m);
 		return 1;
 	}
-	printf("end pie_enqueue \n");
+	//printf("end pie_enqueue \n");
 
 	return 0;
 }
@@ -858,7 +858,7 @@ pie_enqueue(struct l4s_flow *q, struct mbuf* m, struct l4s_si *si)
 static void
 pie_drop_head(struct l4s_flow *q, struct l4s_si *si)
 {
-	printf("start pie_drop_head \n");
+	//printf("start pie_drop_head \n");
 	struct mbuf *m = q->mq.head;
 
 	if (m == NULL)
@@ -873,7 +873,7 @@ pie_drop_head(struct l4s_flow *q, struct l4s_si *si)
 	q->pst.accu_prob = 0;
 
 	FREE_PKT(m);
-	printf("end pie_drop_head \n");
+	//printf("end pie_drop_head \n");
 }
 
 /*
@@ -885,7 +885,7 @@ pie_drop_head(struct l4s_flow *q, struct l4s_si *si)
 static inline int
 l4s_classify_flow(struct mbuf *m, uint16_t fcount, struct l4s_si *si)
 {
-	printf("start l4s_classify_flow \n");
+	//printf("start l4s_classify_flow \n");
 	struct ip *ip;
 	struct tcphdr *th;
 	struct udphdr *uh;
@@ -950,7 +950,7 @@ l4s_classify_flow(struct mbuf *m, uint16_t fcount, struct l4s_si *si)
 	hash = jenkins_hash(tuple, 17, HASHINIT) % fcount;
 
 	return hash;
-	printf("end l4s_classify_flow \n");
+	//printf("end l4s_classify_flow \n");
 }
 
 /*
@@ -961,7 +961,7 @@ static int
 l4s_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q, 
 	struct mbuf *m)
 { 
-	printf("start l4s_enqueue \n");
+	//printf("start l4s_enqueue \n");
 	struct l4s_si *si;
 	struct l4s_schk *schk;
 	struct dn_sch_l4s_parms *param;
@@ -1027,7 +1027,7 @@ l4s_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 	}
 
 	return drop;
-	printf("end l4s_enqueue \n");
+	//printf("end l4s_enqueue \n");
 }
 
 /*
@@ -1037,7 +1037,7 @@ l4s_enqueue(struct dn_sch_inst *_si, struct dn_queue *_q,
 static struct mbuf *
 l4s_dequeue(struct dn_sch_inst *_si)
 {
-	printf("start l4s_dequeue \n"); 
+	//printf("start l4s_dequeue \n"); 
 	struct l4s_si *si;
 	struct l4s_schk *schk;
 	struct dn_sch_l4s_parms *param;
@@ -1105,7 +1105,7 @@ l4s_dequeue(struct dn_sch_inst *_si)
 		/* we have a packet to return, 
 		 * update flow deficit and return the packet*/
 		f->deficit -= mbuf->m_pkthdr.len;
-		printf("end l4s_dequeue \n");
+		//printf("end l4s_dequeue \n");
 		return mbuf;
 
 	} while (1);
@@ -1122,7 +1122,7 @@ l4s_dequeue(struct dn_sch_inst *_si)
 static int
 l4s_new_sched(struct dn_sch_inst *_si)
 {
-	printf("start l4s_new_sched \n");
+	//printf("start l4s_new_sched \n");
 	struct l4s_si *si;
 	struct dn_queue *q;
 	struct l4s_schk *schk;
@@ -1186,7 +1186,7 @@ l4s_new_sched(struct dn_sch_inst *_si)
 	dummynet_sched_lock();
 	l4s_desc.ref_count++;
 	dummynet_sched_unlock();
-	printf("end l4s_new_sched \n");
+	//printf("end l4s_new_sched \n");
 
 	return 0;
 }
@@ -1197,7 +1197,7 @@ l4s_new_sched(struct dn_sch_inst *_si)
 static int
 l4s_free_sched(struct dn_sch_inst *_si)
 {
-	printf("start l4s_free_sched \n");
+	//printf("start l4s_free_sched \n");
 	struct l4s_si *si;
 	struct l4s_schk *schk;
 	struct l4s_flow *flows;
@@ -1210,7 +1210,7 @@ l4s_free_sched(struct dn_sch_inst *_si)
 		pie_cleanup(&flows[i]);
 	}
 	si->si_extra = NULL;
-	printf("end l4s_free_sched \n");
+	//printf("end l4s_free_sched \n");
 	return 0;
 }
 
@@ -1221,7 +1221,7 @@ l4s_free_sched(struct dn_sch_inst *_si)
 static int
 l4s_config(struct dn_schk *_schk)
 {
-	printf("start l4s_config \n");
+	//printf("start l4s_config \n");
 	struct l4s_schk *schk;
 	struct dn_extra_parms *ep;
 	struct dn_sch_l4s_parms *fqp_cfg;
@@ -1300,7 +1300,7 @@ l4s_config(struct dn_schk *_schk)
 		D("Wrong parameters for l4s scheduler");
 		return 1;
 	}
-	printf(" end l4s_config \n");
+	//printf(" end l4s_config \n");
 
 	return 0;
 }
@@ -1311,7 +1311,7 @@ l4s_config(struct dn_schk *_schk)
  */
 static int 
 l4s_getconfig (struct dn_schk *_schk, struct dn_extra_parms *ep) {
-	printf("start l4s_getconfig \n");
+	//printf("start l4s_getconfig \n");
 	struct l4s_schk *schk = (struct l4s_schk *)(_schk+1);
 	struct dn_sch_l4s_parms *fqp_cfg;
 
@@ -1329,7 +1329,7 @@ l4s_getconfig (struct dn_schk *_schk, struct dn_extra_parms *ep) {
 	ep->par[7] = fqp_cfg->quantum;
 	ep->par[8] = fqp_cfg->limit;
 	ep->par[9] = fqp_cfg->flows_cnt;
-	printf("end l4s_getconfig \n");
+	//printf("end l4s_getconfig \n");
 
 	return 0;
 }
