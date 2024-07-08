@@ -1765,11 +1765,12 @@ end_mask:
 			break;
 
 		case TOK_FQ_CODEL:
+		case TOK_L4S:
 		case TOK_FQ_PIE:
 			if (!strcmp(av[-1],"type"))
-				errx(EX_DATAERR, "use type before fq_codel/fq_pie");
+				errx(EX_DATAERR, "use type before fq_codel/fq_pie/l4s");
 
-			NEED(sch, "fq_codel/fq_pie is only for schd");
+			NEED(sch, "fq_codel/fq_pie/l4s is only for schd");
 			strlcpy(sch_extra->name, av[-1],
 			    sizeof(sch_extra->name));
 			sch_extra->oid.subtype = DN_SCH_PARAMS;
