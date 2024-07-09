@@ -2,6 +2,7 @@
     "files.associations": {
         "*.inc": "c",
         "any": "c",
-        "filesystem": "c"
+        "filesystem": "c",
+        "dn_aqm_pie.h": "c"
     }
 }

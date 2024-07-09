@@ -82,6 +82,8 @@
 
 #define DN_SCHED_FQ_PIE 7
 
+#define FQ_PIE_QUEUE_SIZE 6
+
 VNET_DECLARE(unsigned long, io_pkt_drop);
 #define V_io_pkt_drop VNET(io_pkt_drop)
 
@@ -151,13 +153,13 @@ static struct dn_alg fq_pie_desc;
  * target=15ms, max_burst=150ms, max_ecnth=0.1, 
  * alpha=0.125, beta=1.25, tupdate=15ms
  * FQ-
- * flows=1024, limit=10240, quantum =1514
+ * flows=FQ_PIE_QUEUE_SIZE, limit=10240, quantum =1514
  */
 struct dn_sch_fq_pie_parms 
  fq_pie_sysctl = {{15000 * AQM_TIME_1US, 15000 * AQM_TIME_1US,
 	150000 * AQM_TIME_1US, PIE_SCALE * 0.1, PIE_SCALE * 0.125, 
 	PIE_SCALE * 1.25,	PIE_CAPDROP_ENABLED | PIE_DERAND_ENABLED},
-	1024, 10240, 1514};
+	FQ_PIE_QUEUE_SIZE, 10240, 1514};
 
 static int
 fqpie_sysctl_alpha_beta_handler(SYSCTL_HANDLER_ARGS)
@@ -276,7 +278,7 @@ SYSCTL_PROC(_net_inet_ip_dummynet_fqpie, OID_AUTO, beta,
 SYSCTL_UINT(_net_inet_ip_dummynet_fqpie, OID_AUTO, quantum,
 	CTLFLAG_RW, &fq_pie_sysctl.quantum, 1514, "quantum for FQ_PIE");
 SYSCTL_UINT(_net_inet_ip_dummynet_fqpie, OID_AUTO, flows,
-	CTLFLAG_RW, &fq_pie_sysctl.flows_cnt, 1024, "Number of queues for FQ_PIE");
+	CTLFLAG_RW, &fq_pie_sysctl.flows_cnt, FQ_PIE_QUEUE_SIZE, "Number of queues for FQ_PIE");
 SYSCTL_UINT(_net_inet_ip_dummynet_fqpie, OID_AUTO, limit,
 	CTLFLAG_RW, &fq_pie_sysctl.limit, 10240, "limit for FQ_PIE");
 #endif
@@ -1149,7 +1151,7 @@ fq_pie_config(struct dn_schk *_schk)
 			fqp_cfg->limit = fq_pie_sysctl.limit;
 		else
 			fqp_cfg->limit = ep->par[8];
-		if (ep->par[9] < 0)
+		if (1)
 			fqp_cfg->flows_cnt = fq_pie_sysctl.flows_cnt;
 		else
 			fqp_cfg->flows_cnt = ep->par[9];
