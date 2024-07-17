@@ -32,11 +32,11 @@ To enable L4S, use the following commands after building and installing kernel a
 ```
 ipfw -f flush;ipfw pipe 1 config bw 10Mbits/s delay 20ms ; ipfw sched 1 config pipe 1 type l4s ecn ; ipfw queue 1 config sched 1 ; ipfw add 100 queue 1 ip from 172.16.0.0/16 to 172.16.0.0/16
 ```
-#To enable ECN, run the following command as the root user in your Sender/Client not required in router as default is set to 2 which accepts ECN connections:
+#To enable ECN, run the following command as the root user in your Sender/Client not required in the router as default is set to 2, which accepts ECN connections:
 ```
 	sysctl net.inet.tcp.ecn.enable=1
 ```
-Go to [FreeBSD-DRL-L4S] https://github.com/MPTCP-FreeBSD/FreeBSD-DRL-L4S/blob/main/FreeBSD%20L4S/README.md on more information regarding updating utilizing L4S.
+Go to [FreeBSD-DRL-L4S] https://github.com/MPTCP-FreeBSD/FreeBSD-DRL-L4S/blob/main/FreeBSD%20L4S/README.md for more information regarding updating utilizing L4S.
 
 
 Source Roadmap:
