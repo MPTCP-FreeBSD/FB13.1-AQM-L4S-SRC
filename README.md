@@ -1,27 +1,8 @@
-FreeBSD Source:
+L4S FreeBSD Source:
 ---------------
-This is the top level of the FreeBSD source directory.  This file
-was last revised on:
-$FreeBSD$
-
-FreeBSD is an operating system used to power modern servers,
-desktops, and embedded platforms. A large community has
-continually developed it for more than thirty years. Its
-advanced networking, security, and storage features have
-made FreeBSD the platform of choice for many of the
-busiest web sites and most pervasive embedded networking
-and storage devices.
-
-For copyright information, please see the file COPYRIGHT in this
-directory. Additional copyright information also exists for some
-sources in this tree - please see the specific source directories for
-more information.
-
-The Makefile in this directory supports a number of targets for
-building components (or all) of the FreeBSD source tree.  See build(7), config(8),
-https://www.freebsd.org/doc/en_US.ISO8859-1/books/handbook/makeworld.html, and
-https://www.freebsd.org/doc/en_US.ISO8859-1/books/handbook/kernelconfig.html
-for more information, including setting make(1) variables.
+This repository contains the source code for the FreeBSD kernel modified to support Low Latency, Low Loss, Scalable throughput (L4S) architecture in the 'ipfw' module as a separate AQM scheduler scheme.
+L4S aims to provide a solution for reducing latency and packet loss while maintaining scalable throughput, making it ideal for real-time applications such as video conferencing, online gaming, and other interactive services.
+  ```
 
 Source Roadmap:
 ---------------
