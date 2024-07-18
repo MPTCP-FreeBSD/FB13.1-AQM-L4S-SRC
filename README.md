@@ -36,7 +36,7 @@ ipfw sched 1 config pipe 1 type l4s ecn ;
 ipfw queue 1 config sched 1 ;
 ipfw add 100 queue 1 ip from 172.16.0.0/16 to 172.16.0.0/16
 ```
-#To enable ECN, run the following command as the root user in your Sender/Client not required in the router as default is set to 2, which accepts ECN connections:
+#To enable ECN, run the following command as the root user in your Sender/Client. It is not required in the router, as the default is set to 2, which accepts incoming ECN connections:
 ```
 	sysctl net.inet.tcp.ecn.enable=1
 ```
