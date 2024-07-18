@@ -8,7 +8,7 @@ After the FreeBSD machine is set up, you can build and install the customized AQ
 Clone the kernel source:
 ```bash
 git clone https://github.com/deolsatish/FB13.1-AQM-SRC.git <path>
-git checkout l4s-dev
+git checkout FB13.1-L4S-KERNEL-SRC
 cd <path>
 ```
 Build the world (everything but the kernel):
